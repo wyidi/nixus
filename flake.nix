@@ -14,13 +14,6 @@
 
       systems = [ "aarch64-darwin" "x86_64-darwin" "x86_64-linux" ];
 
-      perSystem = { pkgs, ... }: let python = pkgs.python314; in {
-        packages = {
-          inherit python;
-          ansible = python.pkgs.ansible-core;
-        };
-      };
-
       imports = [
         flakeModule
         (inputs.import-tree ./tests)

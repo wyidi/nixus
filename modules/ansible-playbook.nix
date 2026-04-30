@@ -48,7 +48,7 @@ in {
   };
 
   config = {
-    perSystem = { system, pkgs, ... }: let
+    perSystem = { system, pkgs, config, ... }: let
       filterNull = value: 
         if builtins.isAttrs value && !builtins.hasAttr "_type" value then 
           filterAttrs (name: value: !builtins.isNull value) (builtins.mapAttrs (name: value: filterNull value) value)
@@ -67,13 +67,8 @@ in {
       #--packages-/
 
 
-      ansible = nixus.withSystem system ({ config, ... }:
-        config.packages.ansible
-      );
-
-      python = nixus.withSystem system ({ config, ... }:
-        config.packages.python
-      );
+      ansible = config.nixible.package.ansible;
+      python  = config.nixible.package.python;
 
       #/-package--
       # NixOS 25.11 Manual: Language and frameworks/Python

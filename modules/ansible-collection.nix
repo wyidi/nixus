@@ -31,9 +31,9 @@ in {
     }));
   };
 
-  options.perSystem = flake-parts-lib.mkPerSystemOption ( {system, pkgs, ...} : {
+  options.perSystem = flake-parts-lib.mkPerSystemOption ( { ... } : {
     options.nixible.collection = mkOption {
-      type = types.attrsOf (types.submodule ({ name, ... }: {
+      type = types.attrsOf (types.submodule ({ ... }: {
 
         options.package = mkOption {
           type = types.package;
@@ -47,10 +47,8 @@ in {
     };
   });
 
-  config.perSystem = { system, pkgs, ... }: let 
-    ansible = nixus.withSystem system ({ config, ... }:
-      config.packages.ansible
-    );
+  config.perSystem = { system, pkgs, config, ... }: let 
+    ansible = config.nixible.package.ansible;
 
     mkCollection = name: value: pkgs.stdenv.mkDerivation {
       pname = "collection-" + name;
