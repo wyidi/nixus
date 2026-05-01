@@ -21,7 +21,7 @@ in {
       };
 
       options.requires = mkOption {
-        type = types.functionTo types.listOf types.package;
+        type = types.functionTo (types.listOf types.package);
         description = ''
           Python packages which collection requires.
         '';

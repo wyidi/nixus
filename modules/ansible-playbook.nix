@@ -1,4 +1,4 @@
-{ lib, config, nixus, ... }: with lib; let 
+{ lib, config, flake-parts-lib, ... }: with lib; let 
   cfg = config.nixible;
 in {
   options.nixible.playbook = mkOption {
@@ -47,6 +47,24 @@ in {
     })));
   };
 
+  options.perSystem = flake-parts-lib.mkPerSystemOption ( { ... } : {
+    options.nixible.playbook = mkOption {
+      type = types.attrsOf (types.submodule ({ ... }: {
+
+        options.package = mkOption {
+          type = types.package;
+          description = ''
+            Package of playbook.
+          '';
+          readOnly = true;
+        };
+
+      }));
+
+      default = {};
+    };
+  });
+
   config = {
     perSystem = { system, pkgs, config, ... }: let
       filterNull = value: 
@@ -57,15 +75,7 @@ in {
         else 
           value;
 
-      mkPlaybook = name: value: 
-        (pkgs.formats.yaml {}).generate name (filterNull value);
-
-      #/-packages--
-      playbooks = mapAttrs' (name: value:
-        let pname = "playbook-" + name; in nameValuePair pname (mkPlaybook pname value)
-      ) cfg.playbook;
-      #--packages-/
-
+      mkPlaybook = name: value: (pkgs.formats.yaml {}).generate ("playbook-" + name) (filterNull value);
 
       ansible = config.nixible.package.ansible;
       python  = config.nixible.package.python;
@@ -73,26 +83,39 @@ in {
       #/-package--
       # NixOS 25.11 Manual: Language and frameworks/Python
       environment = python.withPackages ( pkgs:
-        lists.unique (foldlAttrs (acc: name: value: acc ++ (value.requires pkgs)) [ansible] config.collection)
+        lists.unique (foldlAttrs (acc: name: value: acc ++ (value.requires pkgs)) [ansible] cfg.collection)
       );
       #--package-/
 
-      #mkExecutable = name: value: pkgs.writeShellApplication {
-      #  inherit name;
-      #  runtimeInputs = [ environment ];
-      #  text = let
+      mkExecutable = collections: name: value: let
+        playbook = value.package; 
+      in pkgs.writeShellApplication {
+        inherit name;
+        runtimeInputs = [ environment ];
+        text = ''
+          export ANSIBLE_COLLECTIONS_PATH=${collections}
+          ansible-playbook ${playbook}
+        '';
+      };
 
-      #  in ''
-      #    export ANSIBLE_COLLECTIONS_PATH
-      #  '';
-      #};
+      #/-package--
+      executables = let 
+        collections = pkgs.symlinkJoin {
+          name  = "collections";
+          paths = lists.unique (mapAttrsToList ( name: value: value.package ) config.nixible.collection);
+        }; 
+      in mapAttrs' (name: value: let
+        pname = "executable-" + name;
+      in nameValuePair pname (mkExecutable collections pname value)) config.nixible.playbook;
+      #--package-/
 
-      #executables = mapAttrs' (name: value:
-      #  let pname = "executable-" + name; in nameValuePair pname 
-      #) playbooks;
+    
+    in {
+      nixible.playbook = mapAttrs (name: value:
+        { package = (mkPlaybook name value); }
+      ) cfg.playbook;
 
-    in { 
-      packages = playbooks // { inherit environment; };
+      packages = { inherit environment; } // executables;
     };
   };
 }
