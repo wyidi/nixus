@@ -58,7 +58,6 @@ in {
         Package of playbook.
       '';
 
-      default = {}; 
       readOnly = true;
     };
 
@@ -109,9 +108,7 @@ in {
 
     
     in {
-      nixible.package.playbook = mapAttrs (name: value:
-        { package = (mkPlaybook name value); }
-      ) cfg.playbook;
+      nixible.package.playbook = mapAttrs mkPlaybook cfg.playbook;
 
       packages = { inherit environment; } // executables;
     };

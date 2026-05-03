@@ -40,7 +40,6 @@ in {
       description = ''
         Package of collection.
       '';
-      default = {};
       readOnly = true;
     };
   });
@@ -71,9 +70,7 @@ in {
     };
 
   in {
-    nixible.package.collection = mapAttrs (name: value:
-      { package = (mkCollection name value); }
-    ) cfg.collection;
+    nixible.package.collection = mapAttrs mkCollection cfg.collection;
   };
 
 }

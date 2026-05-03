@@ -52,6 +52,8 @@ in {
   };
 
   config = let
+    TODO = builtins.throw "TODO";
+
     mkVXLAN = ( cluster: 
       peers: TODO
     );
@@ -64,9 +66,11 @@ in {
     clusters = attrValues cfg.proxmox.cluster;
     subnets  = attrValues cfg.networks.subnet;
   in {
-    nixible.playbook = {
-      backbone-vxlan  =   peers |> map  mkVXLAN clusters;
-      backbone-subnet = subnets |> map mkSubnet clusters;
+    perSystem = { pkgs, config, ... }: let cfg = config.nixible; in {
+      nixible.playbook = {
+        backbone-vxlan  = map (f: f   peers) (map  mkVXLAN clusters);
+        backbone-subnet = map (f: f subnets) (map mkSubnet clusters);
+      };
     };
   };
 }
