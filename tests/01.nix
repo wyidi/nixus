@@ -6,7 +6,7 @@
   nixible.playbook = {
     network = [{
         name  = "Deploy network";
-        tasks = [ { name = "Create VXLAN"; } ];
+        tasks = [ { name = "Create VXLAN"; debug.msg = "Hello World"; } ];
     }];
   };
 

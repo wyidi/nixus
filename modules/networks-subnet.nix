@@ -1,34 +1,48 @@
-{ lib, ... }: with lib; {
+{ lib, config, ... }: with lib; let
+  cfg = config.nixus;
+in {
   options.nixus.networks.subnet = mkOption {
     type = types.attrsOf (types.submodule ({ name, ... }: {
       options = {
         enable = mkEnableOption "subnet ${name}";
 
-        # https://datatracker.ietf.org/doc/html/rfc4193
+        # RFC4193
         ipv6 = mkOption {
-          type = types.submodule ({ ... }: {
+          type = types.submodule ({ name, ... }: {
 
-            globalId = mkOption {
+            options.globalId = mkOption {
               type = types.str;
               description = ''
                 Prefix of a subnet that is globally unique.
               '';
             };
  
-            subnetId = mkOption {
+            options.subnetId = mkOption {
               type = types.str;
               description = ''
                 Identifier of a subnet within the site.
               '';
             };
 
-            mask = mkOption {
+            options.mask = mkOption {
               type = types.int;
               description = ''
                 Mask of a subnet.
               '';
-              default = 64; readOnly = true;
+              readOnly = true;
             };
+
+            options.vnetId = mkOption {
+              type = types.str;
+              description = ''
+                Identifier of a vnet that contains a subnet.
+              '';
+              readOnly = true;
+            };
+
+            config.mask = 64;
+
+            config.vnetId = name;
 
           });
         };
@@ -37,7 +51,22 @@
     }));
   };
 
-  config = {
+  config = let
+    mkVXLAN = ( cluster: 
+      peers: TODO
+    );
 
+    mkSubnet = ( cluster:
+      subnet: TODO
+    );
+
+    peers    = TODO;
+    clusters = attrValues cfg.proxmox.cluster;
+    subnets  = attrValues cfg.networks.subnet;
+  in {
+    nixible.playbook = {
+      backbone-vxlan  =   peers |> map  mkVXLAN clusters;
+      backbone-subnet = subnets |> map mkSubnet clusters;
+    };
   };
 }

@@ -1,72 +1,72 @@
-{ lib, config, flake-parts-lib, ... }: with lib; let 
-  cfg = config.nixible;
+{ lib, flake-parts-lib, ... }: with lib; let 
+  module_playbook = (types.listOf (types.submodule ({ ... }: { 
+    options.name = mkOption {
+      type = types.nullOr types.str;
+      description = ''
+        Name of the play.
+      '';
+    };
+
+    options.hosts = mkOption {
+      type = types.str;
+      description = ''
+        The target hosts for this play. 
+      '';
+      default = "localhost";
+    };
+
+    options.tasks = mkOption {
+      type = types.listOf (types.submodule ({ ... }: {
+        options.name = mkOption {
+          type = types.nullOr types.str;
+          description = ''
+            Name of the task.
+          '';
+        };
+
+        freeformType = types.attrsOf types.anything; 
+      }));
+
+      default = [];
+      description = ''
+        List of tasks to execute in this play.
+      '';
+
+    };
+
+    options.become = mkOption {
+      type = types.nullOr types.bool;
+      description = ''
+        Whether to use privilege escalation.
+      '';
+    };
+
+  })));
 in {
-  options.nixible.playbook = mkOption {
-    type = types.attrsOf (types.listOf (types.submodule ({ ... }: { 
-      options.name = mkOption {
-        type = types.nullOr types.str;
-        description = ''
-          Name of the play.
-        '';
-      };
-
-      options.hosts = mkOption {
-        type = types.str;
-        description = ''
-          The target hosts for this play. 
-        '';
-        default = "localhost";
-      };
-
-      options.tasks = mkOption {
-        type = types.listOf (types.submodule ({ ... }: {
-          options.name = mkOption {
-            type = types.nullOr types.str;
-            description = ''
-              Name of the task.
-            '';
-          };
-
-          freeformType = types.attrsOf types.anything; 
-        }));
-
-        default = [];
-        description = ''
-          List of tasks to execute in this play.
-        '';
-
-      };
-
-      options.become = mkOption {
-        type = types.nullOr types.bool;
-        description = ''
-          Whether to use privilege escalation.
-        '';
-      };
-
-    })));
-  };
 
   options.perSystem = flake-parts-lib.mkPerSystemOption ( { ... } : {
     options.nixible.playbook = mkOption {
-      type = types.attrsOf (types.submodule ({ ... }: {
-
-        options.package = mkOption {
-          type = types.package;
-          description = ''
-            Package of playbook.
-          '';
-          readOnly = true;
-        };
-
-      }));
+      type = types.attrsOf module_playbook;
 
       default = {};
     };
+
+    options.nixible.package.playbook = mkOption {
+      type = types.attrsOf types.package;
+
+      description = ''
+        Package of playbook.
+      '';
+
+      default = {}; 
+      readOnly = true;
+    };
+
   });
 
   config = {
-    perSystem = { system, pkgs, config, ... }: let
+    perSystem = { pkgs, config, ... }: let cfg = config.nixible;
+
       filterNull = value: 
         if builtins.isAttrs value && !builtins.hasAttr "_type" value then 
           filterAttrs (name: value: !builtins.isNull value) (builtins.mapAttrs (name: value: filterNull value) value)
@@ -77,8 +77,8 @@ in {
 
       mkPlaybook = name: value: (pkgs.formats.yaml {}).generate ("playbook-" + name) (filterNull value);
 
-      ansible = config.nixible.package.ansible;
-      python  = config.nixible.package.python;
+      ansible = cfg.package.ansible;
+      python  = cfg.package.python;
 
       #/-package--
       # NixOS 25.11 Manual: Language and frameworks/Python
@@ -87,9 +87,7 @@ in {
       );
       #--package-/
 
-      mkExecutable = collections: name: value: let
-        playbook = value.package; 
-      in pkgs.writeShellApplication {
+      mkExecutable = collections: name: playbook: pkgs.writeShellApplication {
         inherit name;
         runtimeInputs = [ environment ];
         text = ''
@@ -102,16 +100,16 @@ in {
       executables = let 
         collections = pkgs.symlinkJoin {
           name  = "collections";
-          paths = lists.unique (mapAttrsToList ( name: value: value.package ) config.nixible.collection);
+          paths = lists.unique (attrValues cfg.package.collection);
         }; 
       in mapAttrs' (name: value: let
         pname = "executable-" + name;
-      in nameValuePair pname (mkExecutable collections pname value)) config.nixible.playbook;
+      in nameValuePair pname (mkExecutable collections pname value)) cfg.package.playbook;
       #--package-/
 
     
     in {
-      nixible.playbook = mapAttrs (name: value:
+      nixible.package.playbook = mapAttrs (name: value:
         { package = (mkPlaybook name value); }
       ) cfg.playbook;
 

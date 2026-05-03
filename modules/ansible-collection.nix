@@ -1,54 +1,52 @@
-{ lib, config, nixus, flake-parts-lib, ... }: with lib; let 
-  cfg = config.nixible;
+{ lib, flake-parts-lib, ... }: with lib; let 
+  module_collection = (types.submodule ({ name, ... }: {
+
+    options.version = mkOption {
+      type = types.str;
+      description = ''
+        Version of the collection.
+      '';
+      example = "1.0.0";
+    };
+
+    options.hash = mkOption {
+      type = types.str;
+      description = ''
+        SHA256 hash of the collection tarball for verification.
+      '';
+      example = "sha256-...";
+    };
+
+    options.requires = mkOption {
+      type = types.functionTo (types.listOf types.package);
+      description = ''
+        Python packages which collection requires.
+      '';
+      default = pkgs: [];
+    };
+
+  }));
+
 in {
-  options.nixible.collection = mkOption {
-    type = types.attrsOf (types.submodule ({ name, ... }: {
 
-      options.version = mkOption {
-        type = types.str;
-        description = ''
-          Version of the collection.
-        '';
-        example = "1.0.0";
-      };
-
-      options.hash = mkOption {
-        type = types.str;
-        description = ''
-          SHA256 hash of the collection tarball for verification.
-        '';
-        example = "sha256-...";
-      };
-
-      options.requires = mkOption {
-        type = types.functionTo (types.listOf types.package);
-        description = ''
-          Python packages which collection requires.
-        '';
-        default = pkgs: [];
-      };
-
-    }));
-  };
-
-  options.perSystem = flake-parts-lib.mkPerSystemOption ( { ... } : {
+  options.perSystem = flake-parts-lib.mkPerSystemOption ( { ... } : { 
     options.nixible.collection = mkOption {
-      type = types.attrsOf (types.submodule ({ ... }: {
+      type = types.attrsOf module_collection;
+      default = {};
+    };
 
-        options.package = mkOption {
-          type = types.package;
-          description = ''
-            Package of collection.
-          '';
-          readOnly = true;
-        };
-
-      }));
+    options.nixible.package.collection = mkOption {
+      type = types.attrsOf types.package;
+      description = ''
+        Package of collection.
+      '';
+      default = {};
+      readOnly = true;
     };
   });
 
-  config.perSystem = { system, pkgs, config, ... }: let 
-    ansible = config.nixible.package.ansible;
+  config.perSystem = { pkgs, config, ... }: let cfg = config.nixible;
+    ansible = cfg.package.ansible;
 
     mkCollection = name: value: pkgs.stdenv.mkDerivation {
       pname = "collection-" + name;
@@ -73,7 +71,7 @@ in {
     };
 
   in {
-    nixible.collection = mapAttrs (name: value:
+    nixible.package.collection = mapAttrs (name: value:
       { package = (mkCollection name value); }
     ) cfg.collection;
   };
