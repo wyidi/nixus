@@ -16,7 +16,17 @@
         requires = pkgs: with pkgs; [ proxmoxer requests ];
       };
     };
+  };
 
+  nixus = {
+    proxmox.cluster.cluster0 = {
+      node.node01 = {
+        address = "";
+      };
+      api_host = "";
+      api_port = 8006;
+      api_user = "";
+    };
   };
 
 }

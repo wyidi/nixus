@@ -1,7 +1,12 @@
 { lib, ... }: with lib; let
   module_node = (types.submodule ({ name, ... }: {
       options = {
-        enable = mkEnableOption "proxmox host ${name}";
+        # enable = mkEnableOption "proxmox host ${name}";
+
+        name = mkOption {
+          type = types.str;
+          default = name; readOnly = true;
+        };
 
         address = mkOption {
           type = types.str;
@@ -10,9 +15,33 @@
       };
   }));
 
-  module_cluster = (types.submodule ({ name, ...}: {
+  module_cluster = (types.submodule ({ name, ... }: {
     options = {
-      type = types.attrsOf module_node;
+      name = mkOption {
+        type = types.str;
+        default = name; readOnly = true;
+      };
+
+      node = mkOption {
+        type = types.attrsOf module_node;
+      };
+
+      api_host = mkOption {
+        type = types.str;
+      };
+
+      api_port = mkOption {
+        type = types.int;
+      };
+
+      api_user = mkOption {
+        type = types.str;
+      };
+
+      validate_certs = mkOption {
+        type = types.bool;
+        default = false;
+      };
     };
   }));
 

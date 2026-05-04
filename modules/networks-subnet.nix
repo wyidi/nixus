@@ -54,22 +54,78 @@ in {
   config = let
     TODO = builtins.throw "TODO";
 
+    clusters = attrValues cfg.proxmox.cluster;
+    subnets  = attrValues cfg.networks.subnet;
+
+    peers = clusters
+      |> map (cluster: attrValues cluster.node)
+      |> concatLists
+      |> map (node: node.address);
+
+    mkPrompt = ansible_variable: {
+      block = [
+        { name = "Prompt ${ansible_variable}";
+          "ansible.builtin.pause" = {
+            echo = false;
+            prompt = "Enter ${ansible_variable}:";
+          };
+          register = "_${ansible_variable}";
+        }
+        { name = "Register ${ansible_variable}";
+          "ansible.builtin.set_fact" = {
+            ${ansible_variable} = "{{ _${ansible_variable}.user_input }}";
+          };
+        }
+      ];
+      when = "${ansible_variable} is not defined";
+      no_log = true;
+    };
+
+    mkPrompts = map mkPrompt;
+
+    addPrompts = prompts: tasks: mkPrompts prompts ++ tasks;
+
+    mkPasswordVar = cluster: "PROXMOX_${toUpper cluster.name}_API_PASSWORD";
+
     mkVXLAN = ( cluster: 
-      peers: TODO
+      peers: {
+        name = "Create VXLAN zone";
+        "community.proxmox.proxmox_zone" = {
+          api_host     = cluster.api_host;
+          api_port     = cluster.api_port;
+          api_user     = cluster.api_user;
+          api_password = "{{${mkPasswordVar cluster}}}";
+
+          validate_certs = cluster.validate_certs;
+
+          type = "vxlan";
+          zone = "nixus";
+
+          peers = concatStringsSep "," peers; #ex: "192.168.0.1,192.168.0.2,192.168.0.3"
+
+          state = "present";
+        };
+      }
     );
 
     mkSubnet = ( cluster:
       subnet: TODO
     );
 
-    peers    = TODO;
-    clusters = attrValues cfg.proxmox.cluster;
-    subnets  = attrValues cfg.networks.subnet;
+    mkSubnets = ( cluster:
+      subnets: TODO
+    );
+
   in {
-    perSystem = { pkgs, config, ... }: let cfg = config.nixible; in {
+    perSystem = { pkgs, config, ... }: let cfg = config.nixible;
+    in {
       nixible.playbook = {
-        backbone-vxlan  = map (f: f   peers) (map  mkVXLAN clusters);
-        backbone-subnet = map (f: f subnets) (map mkSubnet clusters);
+        backbone-vxlan  = [{
+          tasks = map (f: f   peers) (map   mkVXLAN clusters) |> addPrompts (map mkPasswordVar clusters);
+        }];
+        backbone-subnet = [{
+          tasks = map (f: f subnets) (map mkSubnets clusters) |> addPrompts [];
+        }];
       };
     };
   };
