@@ -27,6 +27,8 @@
       api_port = 8006;
       api_user = "";
     };
+
+    networks.subnet.vnet0 = { };
   };
 
 }

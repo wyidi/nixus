@@ -6,6 +6,14 @@ in {
       options = {
         enable = mkEnableOption "subnet ${name}";
 
+        name = mkOption {
+          type = types.str;
+          description = ''
+            Name of the subnet.
+          '';
+          readOnly = true;
+        };
+
         # RFC4193
         ipv6 = mkOption {
           type = types.submodule ({ name, ... }: {
@@ -29,26 +37,19 @@ in {
               description = ''
                 Mask of a subnet.
               '';
-              readOnly = true;
+              default = 64; readOnly = true;
             };
-
-            options.vnetId = mkOption {
-              type = types.str;
-              description = ''
-                Identifier of a vnet that contains a subnet.
-              '';
-              readOnly = true;
-            };
-
-            config.mask = 64;
-
-            config.vnetId = name;
 
           });
         };
 
       };
+
+      config.name = name;
+
     }));
+
+    default = { };
   };
 
   config = let
@@ -87,9 +88,11 @@ in {
 
     mkPasswordVar = cluster: "PROXMOX_${toUpper cluster.name}_API_PASSWORD";
 
+    zone.name = "nixus";
+
     mkVXLAN = ( cluster: 
       peers: {
-        name = "Create VXLAN zone";
+        name = "Create VXLAN zone for ${cluster.name}";
         "community.proxmox.proxmox_zone" = {
           api_host     = cluster.api_host;
           api_port     = cluster.api_port;
@@ -99,9 +102,11 @@ in {
           validate_certs = cluster.validate_certs;
 
           type = "vxlan";
-          zone = "nixus";
+          zone = zone.name;
 
           peers = concatStringsSep "," peers; #ex: "192.168.0.1,192.168.0.2,192.168.0.3"
+
+          bridge = "vmbr0"; # TODO: parameterize bridge
 
           state = "present";
         };
@@ -109,12 +114,27 @@ in {
     );
 
     mkSubnet = ( cluster:
-      subnet: TODO
+      subnet: {
+        name = "Create subnet ${subnet.name}";
+        block = [{
+          "community.proxmox.proxmox_vnet" = {
+            api_host     = cluster.api_host;
+            api_port     = cluster.api_port;
+            api_user     = cluster.api_user;
+            api_password = "{{${mkPasswordVar cluster}}}";
+ 
+            validate_certs = cluster.validate_certs;
+
+            vnet = subnet.name;
+            zone =   zone.name;
+
+            state = "present";
+          };
+        }];
+      }
     );
 
-    mkSubnets = ( cluster:
-      subnets: TODO
-    );
+    mkSubnets = cluster: map (mkSubnet cluster);
 
   in {
     perSystem = { pkgs, config, ... }: let cfg = config.nixible;
@@ -124,7 +144,7 @@ in {
           tasks = map (f: f   peers) (map   mkVXLAN clusters) |> addPrompts (map mkPasswordVar clusters);
         }];
         backbone-subnet = [{
-          tasks = map (f: f subnets) (map mkSubnets clusters) |> addPrompts [];
+          tasks = map (f: f subnets) (map mkSubnets clusters) |> concatLists |> addPrompts (map mkPasswordVar clusters);
         }];
       };
     };
