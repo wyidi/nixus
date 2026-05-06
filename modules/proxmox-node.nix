@@ -1,8 +1,6 @@
 { lib, ... }: with lib; let
   module_node = (types.submodule ({ name, ... }: {
       options = {
-        # enable = mkEnableOption "proxmox host ${name}";
-
         name = mkOption {
           type = types.str;
           default = name; readOnly = true;

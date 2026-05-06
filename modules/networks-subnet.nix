@@ -1,4 +1,4 @@
-{ lib, config, ... }: with lib; let
+{ lib, config, nixus-lib, ... }: with lib; let
   cfg = config.nixus;
 in {
   options.nixus.networks.subnet = mkOption {
@@ -141,10 +141,10 @@ in {
     in {
       nixible.playbook = {
         backbone-vxlan  = [{
-          tasks = map (f: f   peers) (map   mkVXLAN clusters) |> addPrompts (map mkPasswordVar clusters);
+          tasks = map (f: f   peers) (map   mkVXLAN clusters) |> nixus-lib.addPrompts (map mkPasswordVar clusters);
         }];
         backbone-subnet = [{
-          tasks = map (f: f subnets) (map mkSubnets clusters) |> concatLists |> addPrompts (map mkPasswordVar clusters);
+          tasks = map (f: f subnets) (map mkSubnets clusters) |> concatLists |> nixus-lib.addPrompts (map mkPasswordVar clusters);
         }];
       };
     };
