@@ -1,6 +1,11 @@
 { lib, ... }: with lib; let
-  module_node = (types.submodule ({ name, ... }: {
+  module_node = cluster: (types.submodule ({ name, ... }: {
       options = {
+        cluster = mkOption {
+          type = types.str;
+          default = cluster; readOnly = true;
+        };
+
         name = mkOption {
           type = types.str;
           default = name; readOnly = true;
@@ -21,7 +26,7 @@
       };
 
       node = mkOption {
-        type = types.attrsOf module_node;
+        type = types.attrsOf (module_node cluster);
       };
 
       api_host = mkOption {

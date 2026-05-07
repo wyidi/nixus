@@ -1,4 +1,4 @@
-let
+{ ... }: let
   mkPrompt = ansible_variable: {
     block = [
       { name = "Prompt ${ansible_variable}";
@@ -18,10 +18,8 @@ let
     no_log = true;
   };
 
-  mkPrompts = map mkPrompt;
-
-  addPrompts = variables: tasks: mkPrompts variables ++ tasks;
+  task-prompt-vars = map mkPrompt;
 
 in {
-  inherit addPrompts;
+  inherit task-prompt-vars;
 }
