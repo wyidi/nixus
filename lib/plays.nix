@@ -4,4 +4,6 @@
     # - "f" is a function that ranges over plays
     # - "xs" is a list of arguments of f
     foldp = f: xs: (xs |> head |> f) // foldl ( acc: x: { tasks = acc.tasks ++ (f x).tasks; } ) { tasks = []; } xs;
+
+    stackp = f: xs: foldl (acc: x: acc ++ f x) [] xs;
 }

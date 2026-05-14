@@ -1,13 +1,11 @@
 { lib, nixus-lib, ... }: with lib; let cfg = config.nixus;
-  inherit (nixus-lib) TODO;
-
   module_zfs = zpool: (types.submodule ({ name, ... }: {
     options = {
       name = mkOption {
         type = types.str;
         default = zpool.name + "/" + name; readOnly = true;
         description = ''
-          Name of zfs dataset.
+          Full name of zfs dataset.
         '';
       };
     };
@@ -32,13 +30,14 @@
     };
   }));
 
-  module_zpool = (types.submodule ({ name, config, ... }: {
+  module_zpool = cluster: node: (types.submodule ({ name, config, ... }: {
     options = {
       cluster = mkOption {
         type = types.str;
         description = ''
           Name of the cluster that contains a zpool.
         '';
+        default = cluster; readOnly = true;
       };
 
       node = mkOption {
@@ -46,6 +45,7 @@
         description = ''
           Name of the node that contains a zpool.
         '';
+        default = node; readOnly = true;
       };
 
       name = mkOption {
@@ -56,8 +56,8 @@
         '';
       };
 
-      zfs = mkOption {
-        type = types.attrsOf (builtins.removeAttrs config ["zfs"] |> module_zfs);
+      datasets = mkOption {
+        type = types.attrsOf (builtins.removeAttrs config ["datasets"] |> module_zfs);
         default = {};
         description = ''
           ZFS datasets of zpool.
@@ -75,73 +75,77 @@
     };
   }));
 in {
-  options.nixus.storage.zpool = mkOption {
-    type = types.attrsOf module_zpool;
+  options.nixus.cluster = mkOption {
+    type = types.attrsOf (types.submodule ({ cluster, ... }: {
+      options.node = types.attrsOf (types.submodule ({ node, ... }: {
+        options.zpool = {
+          type = types.attrsOf (module_zpool cluster node);
+          description = ''
+            List of zpools.
+          '';
 
-    default = {};
+          default = {};
+        };
+      }));
+    }));
   };
 
   config = let
-    inherit (nixus-lib) foldp play-add-pve-hosts;
+    inherit (nixus-lib) foldp stackp foldt mkPlayAddPVEHost;
 
-    play-add-zpools = zpools: let
-    # /-Implementation--
-      task-create-zpool = zpool: [{
-        name = "Create zpool ${zpool.name}";
-        "community.general.zpool" = {
-          name  = zpool.name;
-          vdevs = zpool.vdevs;
-        };
-      }];
-
-      task-create-zfs = zpool: TODO;
-
-      play-add-zpool = zpool: {
-        hosts = TODO; # name of host follows convention ( function )
-
-        tasks = concatLists [
-          (task-create-zpool zpool)
-          (task-create-zfs   zpool)
-        ];
-
+    mkTaskAddZFSPool = zpool: [{
+      name = "Create zpool ${zpool.name}";
+      "community.general.zpool" = {
+        name  = zpool.name;
+        vdevs = zpool.vdevs;
       };
+    }];
 
-      play-add-hosts  = zpool-groups: zpool-groups 
-      |> foldl ( acc: group: acc ++ [(head group).node] ) [] 
-      |> play-add-pve-hosts;
+    mkPlayAddZFSPools = node: [{
+      hosts = TODO; # The host name should follows convention
+      tasks = foldt mkTaskAddZFSPool node.zpool;
+    }];
 
-      play-add-zpools = zpool-groups: zpool-groups 
-      |> map ( group: foldp play-add-zpool group );
+    mkTaskAddZFSSet = dataset: [{
+      name = "Create dataset ${dataset.name}";
+      "community.general.zfs" = {
+        name = dataset.name;
+        extra_zfs_properties.mountpoint = "/" + dataset.name;
+        state = "present";
+      };
+    }];
 
-
-      groupPools = acc: zpool: with zpool; let
-          prev = attrByPath [ "${cluster}" "${node}" ] [ ] acc;
-        in  acc // { ${cluster}.${node} = prev ++ zpool; }; 
-
-      zpool-groups = zpools |> foldl groupPools {} |> attrValues |> map attrValues;
-
-    # --Implementation-/
-    in concatLists [
-      (play-add-hosts  zpool-groups)
-      (play-add-zpools zpool-groups)
-    ];
-
-
+    mkPlayAddZFSSets = node: [{
+      hosts = TODO; # The host name should follows convention
+      tasks = foldt mkTaskAddZFSSet TODO;
+    }];
+    
   in {
     perSystem = { config, ... }: let cfg = config.nixus;
-      class = attrValues cfg.storage.zpool |> foldl (zpool: 
-        updateManyAttrsByPath [{
-          path = [ "${zpool.cluster}" "${zpool.node}" ];
-          update = old: old ++ zpool;
-        }]
-      ) {};
+      # A function that returns list of all nodes from list of clusters
+      flattenNodes = foldl (acc: cluster: acc ++ attrValues cluster.node);
 
-      zpools = cluster: node: class.${cluster}.${node};
+      nodes = cfg.cluster 
+            # Transform attrset of clusters to list of clusters
+            |> attrValues 
+            # Transform list of clusters to list of all nodes
+            |> flattenNodes 
+            # Filter out nodes that don't have zpool
+            |> filter (node: node.zpool != {});
+
+      # A play that dynamically adds pve nodes to the ansible inventory
+      PlayAddZFSHosts =  foldp mkPlayAddPVEHost   nodes;
+      # A list of plays where each adds zpools   to a particular node
+      PlayAddZFSPools = stackp mkPlayAddZFSPools  nodes;
+      # A list of plays where each adds datasets to a particular node
+      PlayAddZFSSets  = stackp mkPlayAddZFSSets   nodes;
     in {
 
-      nixible.playbook = {
-        proxmox-storage = play-add-zpools zpools;
-      };
+      nixible.playbook.zfs = concatLists [
+        PlayAddZFSHosts
+        PlayAddZFSPools
+        PlayAddZFSSets
+      ];
 
     };
   };
