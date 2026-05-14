@@ -56,7 +56,7 @@
         '';
       };
 
-      datasets = mkOption {
+      dataset = mkOption {
         type = types.attrsOf (builtins.removeAttrs config ["datasets"] |> module_zfs);
         default = {};
         description = ''
@@ -101,9 +101,9 @@ in {
       };
     }];
 
-    mkPlayAddZFSPools = node: [{
+    mkPlayAddZFSPools = node: let zpools = attrValues node.zpool; in [{
       hosts = TODO; # The host name should follows convention
-      tasks = foldt mkTaskAddZFSPool node.zpool;
+      tasks = foldt mkTaskAddZFSPool zpools;
     }];
 
     mkTaskAddZFSSet = dataset: [{
@@ -115,9 +115,9 @@ in {
       };
     }];
 
-    mkPlayAddZFSSets = node: [{
+    mkPlayAddZFSSets = node: let zpools = attrValues node.zpool; in [{
       hosts = TODO; # The host name should follows convention
-      tasks = foldt mkTaskAddZFSSet TODO;
+      tasks = foldt (zpool: let datasets = attrValues zpool.dataset; in foldt mkTaskAddZFSSet datasets) zpools;
     }];
     
   in {
