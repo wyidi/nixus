@@ -13,7 +13,7 @@
 
         address = mkOption {
           type = types.str;
-          description = "IPv4 address of the host.";
+          description = "IPv6 address of the host.";
         };
       };
   }));

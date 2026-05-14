@@ -91,7 +91,7 @@ in {
   };
 
   config = let
-    inherit (nixus-lib) foldp stackp foldt mkPlayAddPVEHost;
+    inherit (nixus-lib) foldp stackp foldt mkNamePVEHost mkPlayAddPVEHost;
 
     mkTaskAddZFSPool = zpool: [{
       name = "Create zpool ${zpool.name}";
@@ -102,7 +102,8 @@ in {
     }];
 
     mkPlayAddZFSPools = node: let zpools = attrValues node.zpool; in [{
-      hosts = TODO; # The host name should follows convention
+      # The host name follows convention
+      hosts = mkNamePVEHost node;
       tasks = foldt mkTaskAddZFSPool zpools;
     }];
 
@@ -116,37 +117,36 @@ in {
     }];
 
     mkPlayAddZFSSets = node: let zpools = attrValues node.zpool; in [{
-      hosts = TODO; # The host name should follows convention
+      # The host name follows convention
+      hosts = mkNamePVEHost node;
       tasks = foldt (zpool: let datasets = attrValues zpool.dataset; in foldt mkTaskAddZFSSet datasets) zpools;
     }];
+
+    # A function that returns list of all nodes from list of clusters
+    flattenNodes = foldl (acc: cluster: acc ++ attrValues cluster.node);
+
+    nodes = cfg.cluster 
+          # Transform attrset of clusters to list of clusters
+          |> attrValues 
+          # Transform list of clusters to list of all nodes
+          |> flattenNodes 
+          # Filter out nodes that don't have zpool
+          |> filter (node: node.zpool != {});
+
+    # A play that dynamically adds pve nodes to the ansible inventory
+    PlayAddZFSHosts =  foldp mkPlayAddPVEHost   nodes;
+    # A list of plays where each adds zpools   to a particular node
+    PlayAddZFSPools = stackp mkPlayAddZFSPools  nodes;
+    # A list of plays where each adds datasets to a particular node
+    PlayAddZFSSets  = stackp mkPlayAddZFSSets   nodes;
     
-  in {
-    perSystem = { config, ... }: let cfg = config.nixus;
-      # A function that returns list of all nodes from list of clusters
-      flattenNodes = foldl (acc: cluster: acc ++ attrValues cluster.node);
+  in { perSystem = { ... }: {
 
-      nodes = cfg.cluster 
-            # Transform attrset of clusters to list of clusters
-            |> attrValues 
-            # Transform list of clusters to list of all nodes
-            |> flattenNodes 
-            # Filter out nodes that don't have zpool
-            |> filter (node: node.zpool != {});
+    nixible.playbook.zfs = concatLists [
+      PlayAddZFSHosts
+      PlayAddZFSPools
+      PlayAddZFSSets
+    ];
 
-      # A play that dynamically adds pve nodes to the ansible inventory
-      PlayAddZFSHosts =  foldp mkPlayAddPVEHost   nodes;
-      # A list of plays where each adds zpools   to a particular node
-      PlayAddZFSPools = stackp mkPlayAddZFSPools  nodes;
-      # A list of plays where each adds datasets to a particular node
-      PlayAddZFSSets  = stackp mkPlayAddZFSSets   nodes;
-    in {
-
-      nixible.playbook.zfs = concatLists [
-        PlayAddZFSHosts
-        PlayAddZFSPools
-        PlayAddZFSSets
-      ];
-
-    };
-  };
+  };};
 }

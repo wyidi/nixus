@@ -1,6 +1,5 @@
-{ lib, nixus-lib, config, ... }: with lib; let
-  cfg = config.nixus;
-in {
+{ lib, nixus-lib, config, ... }: with lib; let cfg = config.nixus; in {
+
   options.nixus.networks.subnet = mkOption {
     type = types.attrsOf (types.submodule ({ name, ... }: {
       options = {
@@ -113,24 +112,25 @@ in {
 
   in {
     perSystem = { ... }: let 
-      inherit (nixus-lib) task-prompt-vars;
+      inherit (nixus-lib) foldt mkTaskGetClusterPWD;
 
-      vars-pwd = map mkPasswordVar clusters;
+      TaskGetClusterPWDs = foldt mkTaskGetClusterPWD clusters;
+
     in {
 
       nixible.playbook = {
 
-        backbone-vxlan  = [{
+        vxlan = [{
           tasks = concatLists [
-            (task-prompt-vars vars-pwd)
+            TaskGetClusterPWDs
             (map (f: f peers) (map task-vxlan clusters))
           ];
 
         }];
 
-        backbone-subnet = [{
+        subnet = [{
           tasks = flatten [
-            (task-prompt-vars vars-pwd)
+            TaskGetClusterPWDs
             (map (f: f subnets) (map task-subnets clusters))
           ];
 
