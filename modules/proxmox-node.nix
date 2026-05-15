@@ -26,7 +26,7 @@
       };
 
       node = mkOption {
-        type = types.attrsOf (module_node cluster);
+        type = types.attrsOf (module_node name);
       };
 
       api_host = mkOption {

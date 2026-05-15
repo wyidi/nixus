@@ -22,6 +22,16 @@
     proxmox.cluster.cluster0 = {
       node.node01 = {
         address = "";
+
+        zpool.tank = {
+          vdevs = [{
+            type = "stripe";
+            disks = [ "deva" ];
+          }];
+          dataset = {
+            test = {};
+          };
+        };
       };
       api_host = "";
       api_port = 8006;

@@ -75,10 +75,11 @@
     };
   }));
 in {
-  options.nixus.cluster = mkOption {
+  options.nixus.proxmox.cluster = mkOption {
     type = types.attrsOf (types.submodule ({ cluster, ... }: {
-      options.node = types.attrsOf (types.submodule ({ node, ... }: {
-        options.zpool = {
+      options.node = mkOption { 
+      type = types.attrsOf (types.submodule ({ node, ... }: {
+        options.zpool = mkOption {
           type = types.attrsOf (module_zpool cluster node);
           description = ''
             List of zpools.
@@ -86,7 +87,7 @@ in {
 
           default = {};
         };
-      }));
+      }));};
     }));
   };
 
@@ -122,7 +123,7 @@ in {
       tasks = stackt (zpool: let datasets = attrValues zpool.dataset; in stackt mkTaskAddZFSSet datasets) zpools;
     }];
 
-    nodes = cfg.cluster 
+    nodes = cfg.proxmox.cluster 
           # Transform attrset of clusters to list of clusters
           |> attrValues 
           # Transform list of clusters to list of all nodes
