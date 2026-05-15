@@ -52,7 +52,7 @@
   };
 
   config = let
-    inherit (nixus-lib) foldt foldts flattenNodes mkNameClusterPWD mkTaskGetClusterPWD;
+    inherit (nixus-lib) stackt stackt' flattenNodes mkNameClusterPWD mkTaskGetClusterPWD;
 
     clusters = attrValues cfg.proxmox.cluster;
     subnets  = attrValues cfg.networks.subnet;
@@ -60,7 +60,7 @@
     peers = clusters |> flattenNodes |> map (node: node.address);
     zone.name = "nixus";
 
-    mkTaskAddVXLAN = ( cluster: {
+    mkTaskAddVXLAN = ( cluster: [{
         name = "Create VXLAN zone for ${cluster.name}";
         "community.proxmox.proxmox_zone" = {
           api_host     = cluster.api_host;
@@ -79,33 +79,31 @@
 
           state = "present";
         };
-      }
+      }]
     );
 
     mkTaskAddSubnet = ( cluster:
-      subnet: {
+      subnet: [{
         name = "Create subnet ${subnet.name} at ${cluster.name}";
-        block = [{
-          "community.proxmox.proxmox_vnet" = {
-            api_host     = cluster.api_host;
-            api_port     = cluster.api_port;
-            api_user     = cluster.api_user;
-            api_password = "{{${mkNameClusterPWD cluster}}}";
- 
-            validate_certs = cluster.validate_certs;
+        "community.proxmox.proxmox_vnet" = {
+          api_host     = cluster.api_host;
+          api_port     = cluster.api_port;
+          api_user     = cluster.api_user;
+          api_password = "{{${mkNameClusterPWD cluster}}}";
 
-            vnet = subnet.name;
-            zone =   zone.name;
+          validate_certs = cluster.validate_certs;
 
-            state = "present";
-          };
-        }];
-      }
+          vnet = subnet.name;
+          zone =   zone.name;
+
+          state = "present";
+        };
+      }]
     );
 
-    TaskGetClusterPWDs = foldt  mkTaskGetClusterPWD clusters;
-    TaskAddVXLANs      = foldt  mkTaskAddVXLAN      clusters;
-    TaskAddSubnets     = foldts mkTaskAddSubnet     [ clusters subnets ];
+    TaskGetClusterPWDs = stackt  mkTaskGetClusterPWD clusters;
+    TaskAddVXLANs      = stackt  mkTaskAddVXLAN      clusters;
+    TaskAddSubnets     = stackt' mkTaskAddSubnet     [ clusters subnets ];
 
   in { perSystem = { ... }: {
 

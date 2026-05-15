@@ -1,5 +1,5 @@
-{ lib, ... }: with lib; {
-    foldt = f: xs: foldl (acc: x: acc ++ f x) [] xs;
+{ lib, ... }: with lib; rec {
+    stackt  = f: xs: foldl (acc: x: acc ++ (f x)) [] xs;
 
-    foldts = f: xss: if xss == [] then f else foldt (x: foldts (f x) (tail xss)) (head xss);
+    stackt' = f: xss: if xss == [] then [] else stackt (x: stackt' (f x) (tail xss)) (head xss);
 }

@@ -20,7 +20,7 @@ in {
     name = mkNamePVEHost    node;
     pwd  = mkNamePVEHostPWD node;
     TaskAskAndSetVar = mkTaskAskAndSetVar pwd;
-    TaskAddHost      = mkTaskAddHost { 
+    TaskAddHost      = mkTaskAddHost {
       inherit name;
       ansible_host = node.address; # Using IPv6 is suggested
       ansible_user = "root";

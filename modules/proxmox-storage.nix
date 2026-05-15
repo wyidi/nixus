@@ -1,4 +1,4 @@
-{ lib, nixus-lib, ... }: with lib; let cfg = config.nixus;
+{ config, lib, nixus-lib, ... }: with lib; let cfg = config.nixus;
   module_zfs = zpool: (types.submodule ({ name, ... }: {
     options = {
       name = mkOption {
@@ -91,7 +91,7 @@ in {
   };
 
   config = let
-    inherit (nixus-lib) foldp stackp foldt flattenNodes mkNamePVEHost mkPlayAddPVEHost;
+    inherit (nixus-lib) foldp stackp stackt flattenNodes mkNamePVEHost mkPlayAddPVEHost;
 
     mkTaskAddZFSPool = zpool: [{
       name = "Create zpool ${zpool.name}";
@@ -104,7 +104,7 @@ in {
     mkPlayAddZFSPools = node: let zpools = attrValues node.zpool; in [{
       # The host name follows convention
       hosts = mkNamePVEHost node;
-      tasks = foldt mkTaskAddZFSPool zpools;
+      tasks = stackt mkTaskAddZFSPool zpools;
     }];
 
     mkTaskAddZFSSet = dataset: [{
@@ -119,7 +119,7 @@ in {
     mkPlayAddZFSSets = node: let zpools = attrValues node.zpool; in [{
       # The host name follows convention
       hosts = mkNamePVEHost node;
-      tasks = foldt (zpool: let datasets = attrValues zpool.dataset; in foldt mkTaskAddZFSSet datasets) zpools;
+      tasks = stackt (zpool: let datasets = attrValues zpool.dataset; in stackt mkTaskAddZFSSet datasets) zpools;
     }];
 
     nodes = cfg.cluster 
