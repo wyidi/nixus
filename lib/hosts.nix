@@ -7,8 +7,8 @@
     when = "${name} not in groups['all']";
   }];
 
-  mkNamePVEHost    = node: concatStringsSep "_" [ "HOST" "PVE" node.cluster node.name ];
-  mkNamePVEHostPWD = node: concatStringsSep "_" [ "PWD"  "PVE" node.cluster node.name ];
+  mkNamePVEHost    = node: concatStringsSep "_" [ "HOST" "PVE" (toUpper node.cluster) (toUpper node.name) ];
+  mkNamePVEHostPWD = node: concatStringsSep "_" [ "PWD"  "PVE" (toUpper node.cluster) (toUpper node.name) ];
 in {
   inherit mkTaskAddHost;
   inherit mkNamePVEHost;

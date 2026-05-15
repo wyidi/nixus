@@ -91,7 +91,7 @@ in {
   };
 
   config = let
-    inherit (nixus-lib) foldp stackp foldt mkNamePVEHost mkPlayAddPVEHost;
+    inherit (nixus-lib) foldp stackp foldt flattenNodes mkNamePVEHost mkPlayAddPVEHost;
 
     mkTaskAddZFSPool = zpool: [{
       name = "Create zpool ${zpool.name}";
@@ -121,9 +121,6 @@ in {
       hosts = mkNamePVEHost node;
       tasks = foldt (zpool: let datasets = attrValues zpool.dataset; in foldt mkTaskAddZFSSet datasets) zpools;
     }];
-
-    # A function that returns list of all nodes from list of clusters
-    flattenNodes = foldl (acc: cluster: acc ++ attrValues cluster.node);
 
     nodes = cfg.cluster 
           # Transform attrset of clusters to list of clusters

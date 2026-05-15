@@ -52,26 +52,21 @@
   };
 
   config = let
+    inherit (nixus-lib) foldt foldts flattenNodes mkNameClusterPWD mkTaskGetClusterPWD;
+
     clusters = attrValues cfg.proxmox.cluster;
     subnets  = attrValues cfg.networks.subnet;
 
-    peers = clusters
-      |> map (cluster: attrValues cluster.node)
-      |> concatLists
-      |> map (node: node.address);
-
-    mkPasswordVar = cluster: "PROXMOX_${toUpper cluster.name}_API_PASSWORD";
-
+    peers = clusters |> flattenNodes |> map (node: node.address);
     zone.name = "nixus";
 
-    task-vxlan = ( cluster: 
-      peers: {
+    mkTaskAddVXLAN = ( cluster: {
         name = "Create VXLAN zone for ${cluster.name}";
         "community.proxmox.proxmox_zone" = {
           api_host     = cluster.api_host;
           api_port     = cluster.api_port;
           api_user     = cluster.api_user;
-          api_password = "{{${mkPasswordVar cluster}}}";
+          api_password = "{{${mkNameClusterPWD cluster}}}";
 
           validate_certs = cluster.validate_certs;
 
@@ -87,15 +82,15 @@
       }
     );
 
-    task-subnet = ( cluster:
+    mkTaskAddSubnet = ( cluster:
       subnet: {
-        name = "Create subnet ${subnet.name}";
+        name = "Create subnet ${subnet.name} at ${cluster.name}";
         block = [{
           "community.proxmox.proxmox_vnet" = {
             api_host     = cluster.api_host;
             api_port     = cluster.api_port;
             api_user     = cluster.api_user;
-            api_password = "{{${mkPasswordVar cluster}}}";
+            api_password = "{{${mkNameClusterPWD cluster}}}";
  
             validate_certs = cluster.validate_certs;
 
@@ -108,36 +103,19 @@
       }
     );
 
-    task-subnets = cluster: map (task-subnet cluster);
+    TaskGetClusterPWDs = foldt  mkTaskGetClusterPWD clusters;
+    TaskAddVXLANs      = foldt  mkTaskAddVXLAN      clusters;
+    TaskAddSubnets     = foldts mkTaskAddSubnet     [ clusters subnets ];
 
-  in {
-    perSystem = { ... }: let 
-      inherit (nixus-lib) foldt mkTaskGetClusterPWD;
+  in { perSystem = { ... }: {
 
-      TaskGetClusterPWDs = foldt mkTaskGetClusterPWD clusters;
+    nixible.playbook.vxlan = [{
+      tasks = concatLists [
+        TaskGetClusterPWDs
+        TaskAddVXLANs
+        TaskAddSubnets
+      ];
+    }];
 
-    in {
-
-      nixible.playbook = {
-
-        vxlan = [{
-          tasks = concatLists [
-            TaskGetClusterPWDs
-            (map (f: f peers) (map task-vxlan clusters))
-          ];
-
-        }];
-
-        subnet = [{
-          tasks = flatten [
-            TaskGetClusterPWDs
-            (map (f: f subnets) (map task-subnets clusters))
-          ];
-
-        }];
-
-      };
-
-    };
-  };
+  };};
 }
