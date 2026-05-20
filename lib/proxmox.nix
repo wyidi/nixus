@@ -1,11 +1,11 @@
 { self, lib, ... }: with lib; let
-  mkNodeOptions = opts: { node = mkOption {
-    type = types.attrsOf (types.submodule ({ node, ... }: opts node));
+  mkNodeOptions = mkOpts: { node = mkOption {
+    type = types.attrsOf (types.submodule ({ node, ... }: mkOpts node));
   };};
-  mkClusterOptions = opts: { cluster = mkOption {
-    type = types.attrsOf (types.submodule ({ cluster, ... }: opts cluster));
+  mkClusterOptions = mkOpts: { cluster = mkOption {
+    type = types.attrsOf (types.submodule ({ cluster, ... }: mkOpts cluster));
   };};
-  mkClusterNodeOptions = opts: mkClusterOptions (cluster: mkNodeOptions (node: opts cluster node));
+  mkClusterNodeOptions = mkOpts: mkClusterOptions (cluster: mkNodeOptions (node: mkOpts cluster node));
 in {
   inherit mkNodeOptions;
   inherit mkClusterOptions;
