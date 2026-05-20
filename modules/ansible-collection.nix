@@ -48,12 +48,12 @@ in {
     ansible = cfg.package.ansible;
 
     mkCollection = name: value: pkgs.stdenv.mkDerivation {
-      pname = "collection-" + name;
+      pname   = name;
       version = value.version;
 
       src = pkgs.fetchurl {
         hash = value.hash;
-        url = "https://galaxy.ansible.com/download/${name}-${value.version}.tar.gz";
+        url  = "https://galaxy.ansible.com/download/${name}-${value.version}.tar.gz";
       };
 
       buildInputs = [

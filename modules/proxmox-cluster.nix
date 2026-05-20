@@ -11,6 +11,7 @@
           default = name; readOnly = true;
         };
 
+        # TODO: generalize this
         address = mkOption {
           type = types.str;
           description = "IPv6 address of the host.";

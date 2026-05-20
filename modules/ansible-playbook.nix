@@ -74,7 +74,7 @@ in {
         else 
           value;
 
-      mkPlaybook = name: value: (pkgs.formats.yaml {}).generate ("playbook-" + name) (filterNull value);
+      mkPlaybook = name: value: (pkgs.formats.yaml {}).generate name (filterNull value);
 
       ansible = cfg.package.ansible;
       python  = cfg.package.python;
@@ -98,11 +98,11 @@ in {
       #/-package--
       executables = let 
         collections = pkgs.symlinkJoin {
-          name  = "collections";
+          name  = "ansible-collections";
           paths = lists.unique (attrValues cfg.package.collection);
         }; 
       in mapAttrs' (name: value: let
-        pname = "executable-" + name;
+        pname = name;
       in nameValuePair pname (mkExecutable collections pname value)) cfg.package.playbook;
       #--package-/
 
