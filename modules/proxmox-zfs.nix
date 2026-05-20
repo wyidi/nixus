@@ -82,7 +82,7 @@ in {
     options.zpool = mkOption {
       type = types.attrsOf (module_zpool cluster node);
       description = ''
-        List of zpools.
+        Set of zpools.
       '';
       default = {};
     };
