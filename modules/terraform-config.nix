@@ -21,19 +21,20 @@ in {
 
   config.perSystem = { pkgs, config, ... }: let cfg = config.terraform;
     terranix = cfg.package.terranix;
+    nix      = cfg.package.nix;
 
     mkConfig = name: value: let
-      json = pkgs.writeJSON "config.json" value;
-      code = pkgs.writeText ''
+      json = pkgs.writers.writeJSON "config.json" value;
+      code = pkgs.writeText "config.nix" ''
         { ... }: builtins.fromJSON (builtins.readFile ${json})
       '';
     in pkgs.stdenv.mkDerivation {
-      pname = name;
+      inherit name;
 
       dontUnpack = true; # call mkDerivation without src
       
       buildInputs = [
-        terranix
+        terranix nix
       ];
 
       phases = ["installPhase"];
