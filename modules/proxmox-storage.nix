@@ -7,8 +7,14 @@
         type = types.str;
         description = ''
           The path of the directory on the nodes.
-        ''; 
+        '';
       };
+    };
+  });
+
+  module_lvm-thin_options = types.submodule ({ ... }: {
+    options = {
+
     };
   });
 
@@ -56,12 +62,16 @@
       };
 
       type = mkOption {
-        type = types.enum [ "cephfs" "cifs" "dir" "iscsi" "nfs" "pbs" "zfspool" ];
+        type = types.enum [ "cephfs" "cifs" "dir" "iscsi" "lvm-thin" "nfs" "pbs" "zfs-pool" ];
       };
 
       # Requires type to be "dir"
       dir_options = mkOption {
         type = module_dir_options;
+      };
+
+      lvm-thin_options = mkOption {
+        type = module_lvm-thin_options;
       };
 
       # Requires type to be "nfs"
