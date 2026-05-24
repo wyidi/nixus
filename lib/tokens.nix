@@ -1,16 +1,16 @@
 { self, lib, ... }: with lib; let
   inherit (self) mkNameClusterPWD;
 
-  mkNameClusterTokenID     = TODO;
-  mkNameClusterTokenSecret = TODO;
+  mkNameClusterTokenID     = cluster: tokenid: concatStringsSep "_" [ "PVE" "TOKEN" "ID"     (toUpper cluster.name) (toUpper tokenid)];
+  mkNameClusterTokenSecret = cluster: tokenid: concatStringsSep "_" [ "PVE" "TOKEN" "SECRET" (toUpper cluster.name) (toUpper tokenid)];
 
   mkTaskIssueToken = input: cluster: let
     # ansible local variable name conventions
     ticket       = "ticket";
     token        = "token" ;
     # ansible global variable name conventions
-    token_id     = mkNameClusterTokenID     cluster; # TODO: Revise mkNameClusterTokenID     to consider tokenid
-    token_secret = mkNameClusterTokenSecret cluster; # TODO: Revise mkNameClusterTokenSecret to consider tokenid
+    token_id     = mkNameClusterTokenID     cluster input.api_token_id; # TODO: Revise mkNameClusterTokenID     to consider tokenid
+    token_secret = mkNameClusterTokenSecret cluster input.api_token_id; # TODO: Revise mkNameClusterTokenSecret to consider tokenid
   in [
     # 1.Login to proxmox with password
     {
@@ -83,12 +83,19 @@
     }
   ];
 
-  PVE_ROOT_TOKEN_ID = "nixus";
+  root_token_id = "nixus";
 
-  mkTaskIssueRootToken = mkTaskIssueToken { api_user = "root@pam"; api_token_id = PVE_ROOT_TOKEN_ID; privilege_seperation = false; };
+  mkNameClusterRootTokenID     = cluster: mkNameClusterTokenID     cluster root_token_id;
+  mkNameClusterRootTokenSecret = cluster: mkNameClusterTokenSecret cluster root_token_id;
+
+  mkTaskIssueRootToken = mkTaskIssueToken { api_user = "root@pam"; api_token_id = root_token_id; privilege_seperation = false; };
 
 in {
-  inherit mkTaskIssueToken;
+  # inherit mkNameClusterTokenID;
+  # inherit mkNameClusterTokenSecret;
+  # inherit mkTaskIssueToken;
+
+  inherit mkNameClusterRootTokenID;
+  inherit mkNameClusterRootTokenSecret;
   inherit mkTaskIssueRootToken;
-  inherit PVE_ROOT_TOKEN_ID;
 }
