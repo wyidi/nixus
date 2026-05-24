@@ -1,4 +1,4 @@
-{ lib, ... }: with lib; let
+{ config, lib, ... }: with lib; let cfg = config.nixus;
   module_node = cluster: (types.submodule ({ name, ... }: {
       options = {
         cluster = mkOption {
@@ -38,10 +38,6 @@
         type = types.int;
       };
 
-      api_user = mkOption {
-        type = types.str;
-      };
-
       validate_certs = mkOption {
         type = types.bool;
         default = false;
@@ -53,4 +49,28 @@ in {
   options.nixus.proxmox.cluster = mkOption {
     type = types.attrsOf module_cluster;
   };
+
+  config = let
+    inherit (nixus-lib) stackt mkTaskIssueRootToken mkTaskGetClusterPWD;
+
+    clusters = attrValues cfg.proxmox.cluster;
+
+    TaskGetClusterPWDs  = stackt mkTaskGetClusterPWD  clusters;
+    TaskIssueRootTokens = stackt mkTaskIssueRootToken clusters;
+
+  in { perSystem = { ... }: {
+    nixible.playbook.issue-tokens = {
+      tasks = concatLists [
+        TaskGetClusterPWDs
+        TaskIssueRootTokens
+      ];
+    };
+
+    terraform.config.seed = {
+      # https://developer.hashicorp.com/terraform/language/values/variables#environment-variables
+      # Plan: Inject api token variable using environment variable
+      # root@pam api token is created by outter ansible wrapper. It takes proxmox password and creates it.
+      provider.proxmox = TODO;
+    };
+  };};
 }
