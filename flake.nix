@@ -4,6 +4,8 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
 
+    colmena.url = "github:zhaofengli/colmena";
+
     nix-unit.url = "github:nix-community/nix-unit";
     nix-unit.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -12,7 +14,7 @@
     inputs.flake-parts.lib.mkFlake { inherit inputs; } ({ flake-parts-lib, withSystem, ... } : let
       flakeModule = flake-parts-lib.importApply ./flake-module.nix { inherit inputs; inherit withSystem; };
       nix-unit.flakeModule = inputs.nix-unit.modules.flake.default;
-         tests.flakeModule = inputs.import-tree ./tests;
+      tests   .flakeModule = inputs.import-tree ./tests;
     in {
       # The flakeModule is the only flake output. Import this to use the framework.
       flake = { inherit flakeModule; };
@@ -21,8 +23,9 @@
 
       imports = [ 
         flakeModule
+
         nix-unit.flakeModule
-           tests.flakeModule
+        tests   .flakeModule
       ];
 
     });

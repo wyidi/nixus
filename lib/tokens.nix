@@ -1,16 +1,16 @@
 { self, lib, ... }: with lib; let
   inherit (self) mkNameClusterPWD;
 
-  mkNameClusterTokenID     = cluster: tokenid: concatStringsSep "_" [ "PVE" "TOKEN" "ID"     (toUpper cluster.name) (toUpper tokenid)];
-  mkNameClusterTokenSecret = cluster: tokenid: concatStringsSep "_" [ "PVE" "TOKEN" "SECRET" (toUpper cluster.name) (toUpper tokenid)];
+  mkNameClusterTokenID     = cluster: token_id: concatStringsSep "_" [ "PVE" "TOKEN" "ID"     (toUpper cluster.name) (toUpper token_id)];
+  mkNameClusterTokenSecret = cluster: token_id: concatStringsSep "_" [ "PVE" "TOKEN" "SECRET" (toUpper cluster.name) (toUpper token_id)];
 
   mkTaskIssueToken = input: cluster: let
     # ansible local variable name conventions
     ticket       = "ticket";
     token        = "token" ;
     # ansible global variable name conventions
-    token_id     = mkNameClusterTokenID     cluster input.api_token_id; # TODO: Revise mkNameClusterTokenID     to consider tokenid
-    token_secret = mkNameClusterTokenSecret cluster input.api_token_id; # TODO: Revise mkNameClusterTokenSecret to consider tokenid
+    token_id     = mkNameClusterTokenID     cluster input.api_token_id; 
+    token_secret = mkNameClusterTokenSecret cluster input.api_token_id; 
   in [
     # 1.Login to proxmox with password
     {
@@ -22,8 +22,7 @@
         body_format = "form-urlencoded";
         body = {
           username = "${input.api_user}";
-          # TODO: Revise mkNameClusterPWD to consider username
-          password = "{{ ${mkNameClusterPWD cluster} }}";
+          password = "{{ ${mkNameClusterPWD cluster input.api_user} }}";
         };
         validate_certs = if cluster.validate_certs then "yes" else "no";
       };

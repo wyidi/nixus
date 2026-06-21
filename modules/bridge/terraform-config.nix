@@ -4,11 +4,11 @@
   });
 in {
   options.perSystem = flake-parts-lib.mkPerSystemOption ( { ... } : {
-    options.terraform.config = mkOption {
+    options.terranix.config = mkOption {
       type = module_config;
     };
 
-    options.terraform.package.config = mkOption {
+    options.terranix.package.config = mkOption {
       type = types.attrsOf types.package;
 
       description = ''
@@ -19,7 +19,7 @@ in {
     };
   });
 
-  config.perSystem = { pkgs, config, ... }: let cfg = config.terraform;
+  config.perSystem = { pkgs, config, ... }: let cfg = config.terranix;
     terranix = cfg.package.terranix;
     nix      = cfg.package.nix;
 
@@ -44,6 +44,6 @@ in {
       '';
     };
   in {
-    terraform.package.config = mapAttrs mkConfig cfg.config;
+    terranix.package.config = mapAttrs mkConfig cfg.config;
   };
 }

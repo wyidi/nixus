@@ -51,20 +51,22 @@ in {
   };
 
   config = let
-    inherit (nixus-lib) stackt mkTaskIssueRootToken mkTaskGetClusterPWD;
+    inherit (nixus-lib) stackt mkTaskIssueRootToken mkTaskGetClusterRootPWD;
 
     clusters = attrValues cfg.proxmox.cluster;
 
-    TaskGetClusterPWDs  = stackt mkTaskGetClusterPWD  clusters;
-    TaskIssueRootTokens = stackt mkTaskIssueRootToken clusters;
+    TaskGetClusterRootPWDs = stackt mkTaskGetClusterRootPWD  clusters;
+    TaskIssueRootTokens    = stackt mkTaskIssueRootToken     clusters;
 
   in { perSystem = { ... }: {
     nixible.playbook.issue-tokens = {
       tasks = concatLists [
-        TaskGetClusterPWDs
+        TaskGetClusterRootPWDs
         TaskIssueRootTokens
       ];
     };
+
+    nixible.playbook.trust-cakeys = TODO;
 
     terraform.config.seed = {
       # https://developer.hashicorp.com/terraform/language/values/variables#environment-variables
