@@ -76,8 +76,45 @@ in {
 
       mkPlaybook = name: value: (pkgs.formats.yaml {}).generate name (filterNull value);
 
+
+      #--package--
+      # NixOS 25.11 Manual: Language and frameworks/Python
+      environment = let
+        ansible = cfg.package.ansible;
+        python  = cfg.package.python;
+      in
+        python.withPackages ( pkgs:
+          lists.unique (foldlAttrs (acc: name: value: acc ++ (value.requires pkgs)) [ansible] cfg.collection)
+        );
+      #--package--
+
+
+      mkExecutable = collections: name: playbook: pkgs.writeShellApplication {
+        inherit name;
+        runtimeInputs = [ environment ];
+        text = ''
+          export ANSIBLE_COLLECTIONS_PATH=${collections}
+          ansible-playbook ${playbook}
+        '';
+      };
+
+      #--package--
+      executables = let
+        collections = pkgs.symlinkJoin {
+          name  = "ansible-collections";
+          paths = lists.unique (attrValues cfg.package.collection);
+        };
+
+        playbook = cfg.package.playbook;
+      in
+        mapAttrs' (name: value: nameValuePair name (mkExecutable collections name value)) playbook;
+      #--package--
+
+
     in {
       nixible.package.playbook = mapAttrs mkPlaybook cfg.playbook;
+
+      packages = executables;
     };
   };
 }
