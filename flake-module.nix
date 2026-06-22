@@ -5,4 +5,7 @@ nixus: { lib, ... }: {
     inherit nixus;
   };
 
+  _module.args.lib = lib.extend (final: prev: {
+    TODO = builtins.throw "TODO";
+  });
 }
