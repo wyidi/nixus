@@ -11,6 +11,11 @@ in {
       options.nixpkgs = mkOption {
         type = types.raw;
       };
+
+      options.nodeSpecialArgs = mkOption {
+        type = types.attrsOf (types.attrsOf types.raw);
+      };
+
     });
     default = {};
   };
