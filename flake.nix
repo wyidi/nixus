@@ -15,7 +15,6 @@
     inputs.flake-parts.lib.mkFlake { inherit inputs; } ({ flake-parts-lib, withSystem, ... } : let
       flakeModule = flake-parts-lib.importApply ./flake-module.nix { inherit inputs; inherit withSystem; };
       checkModule = flake-parts-lib.importApply ./check-module.nix { inherit inputs; inherit withSystem; };
-      assetModule = flake-parts-lib.importApply ./asset-module.nix { inherit inputs; inherit withSystem; };
     in {
       # The flakeModule is the only flake output. Import this to use the framework.
       flake = { inherit flakeModule; };
@@ -25,7 +24,6 @@
       imports = [
         flakeModule
         checkModule
-        assetModule
       ];
 
     });

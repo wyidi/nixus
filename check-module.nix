@@ -1,7 +1,10 @@
-nixus: { ... }: {
+nixus: { flake-parts-lib, ... }: let
+  assetModule = flake-parts-lib.importApply ./asset-module.nix nixus;
+in {
   imports = [ 
     (nixus.inputs.import-tree ./tests)
     (nixus.inputs.nix-unit.modules.flake.default)
+    assetModule 
   ];
 
   perSystem = { ... }: {
