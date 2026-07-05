@@ -14,4 +14,13 @@ nixus: { flake-parts-lib, ... }: {
       inherit (nixus.inputs) nixpkgs flake-parts import-tree nix-unit;
     };
   };
+
+  # run below command to unit test
+  # nix flake check
+  # use below command to unit test and see the full log
+  # nix flake check -L
+  # use below command to unit test and ignore build error (no color)
+  # nix flake check -L 2>&1 | awk '/^error:/{exit} {print}'
+  # use below command to respect color
+  # script -q /dev/null nix flake check -L
 }

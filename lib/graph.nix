@@ -2,10 +2,11 @@
 
   reverse = graph: let 
     # hint: neighbors is a set represented as list
-    lst1 = mapAttrsToList (vertex: map (neighbor: { ${neighbor} = vertex; })) graph;
+    lst1 = mapAttrsToList (vertex: map (neighbor: { name = neighbor; value = [ vertex ]; })) graph;
     lst2 = map listToAttrs lst1;
+    lst3 = [(mapAttrs (_: _: []) graph)] ++ lst2;
   in 
-    zipAttrsWith (xs: uniqueStrings (concatLists xs)) lst2;
+    zipAttrsWith (_: xs: uniqueStrings (concatLists xs)) lst3;
 
   linearize = graph: TODO;
 

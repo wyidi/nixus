@@ -1,33 +1,64 @@
 { nixus-lib, ... }: let
-  inherit (nixus-lib) linearize;
+  inherit (nixus-lib) reverse linearize;
 in {
-  flake.tests = {
-    TopologicalSort.testCaseA = let
+  flake.tests.TopologicalSort = {
+    testCase1 = let
       graph = { nodeA = []; }; # graph is represented as adjacency list
     in {
-      expr     = (linearize graph).toset;
+      expr     = (linearize graph).toset or null;
       expected = [ [ "nodeA" ] ]; # linearized strongly connected components
     };
 
-    TopologicalSort.testCaseB = let
+    testCase2 = let
       graph = { nodeA = []; nodeB = []; nodeC = []; }; 
     in {
-      expr     = (linearize graph).toset;
+      expr     = (linearize graph).toset or null;
       expected = [ [ "nodeA" "nodeB" "nodeC" ] ]; 
     };
 
-    TopologicalSort.testCaseC = let
+    testCase3 = let
       graph = { }; 
     in {
-      expr     = (linearize graph).toset;
+      expr     = (linearize graph).toset or null;
       expected = [ ];
     };
 
-    TopologicalSort.testCaseD = let
+    testCase4 = let
       graph = { nodeA = []; nodeB = [ "nodeA" ]; }; 
     in {
-      expr     = (linearize graph).toset;
+      expr     = (linearize graph).toset or null;
       expected = [ [ "nodeA" ] [ "nodeB" ] ]; 
+    };
+
+  };
+
+  flake.tests.ReverseGraph = {
+    testCase1 = let
+      graph = { nodeA = []; };
+    in {
+      expr     = reverse graph;
+      expected = { nodeA = []; }; 
+    };
+
+    testCase2 = let
+      graph = { nodeA = []; nodeB = []; nodeC = []; };
+    in {
+      expr     = reverse graph;
+      expected = { nodeA = []; nodeB = []; nodeC = []; }; 
+    };
+
+    testCase3 = let
+      graph = { }; 
+    in {
+      expr     = reverse graph;
+      expected = { }; 
+    };
+
+    testCase4 = let
+      graph = { nodeA = []; nodeB = [ "nodeA" ]; }; 
+    in {
+      expr     = reverse graph;
+      expected = { nodeA = ["nodeB"]; nodeB = []; }; 
     };
 
   };
