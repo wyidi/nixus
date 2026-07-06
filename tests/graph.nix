@@ -5,28 +5,28 @@ in {
     testCase1 = let
       graph = { nodeA = []; }; # graph is represented as adjacency list
     in {
-      expr     = (linearize graph).toset or null;
+      expr     = (linearize graph).result or null;
       expected = [ [ "nodeA" ] ]; # linearized strongly connected components
     };
 
     testCase2 = let
       graph = { nodeA = []; nodeB = []; nodeC = []; }; 
     in {
-      expr     = (linearize graph).toset or null;
+      expr     = (linearize graph).result or null;
       expected = [ [ "nodeA" "nodeB" "nodeC" ] ]; 
     };
 
     testCase3 = let
       graph = { }; 
     in {
-      expr     = (linearize graph).toset or null;
+      expr     = (linearize graph).result or null;
       expected = [ ];
     };
 
     testCase4 = let
       graph = { nodeA = []; nodeB = [ "nodeA" ]; }; 
     in {
-      expr     = (linearize graph).toset or null;
+      expr     = (linearize graph).result or null;
       expected = [ [ "nodeA" ] [ "nodeB" ] ]; 
     };
 
