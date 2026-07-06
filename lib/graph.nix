@@ -46,7 +46,7 @@
     result = map (level: sort (a: b: a < b) level.value) (sort (x: y: (toIntBase10 x.name) < (toIntBase10 y.name)) (attrsToList levels'));
   };
 
-  linearize' = levels: root: graph: let
+  linearizeAncestors = levels: root: graph: let
     dfs = visited: queue:
       if queue == [] then
         visited
@@ -71,6 +71,7 @@
   };
 
   # Helper function (not exported)
+  # reverseAttrs is extracted from reverse function, so parameter names are not general
   reverseAttrs = graph: let 
     # hint: neighbors is a set represented as list
     lst1 = mapAttrsToList (vertex: map (neighbor: { name = toString neighbor; value = [ vertex ]; })) graph;
@@ -83,5 +84,5 @@
 in {
   inherit reverse;
   inherit linearize;
-  inherit linearize';
+  inherit linearizeAncestors;
 }
