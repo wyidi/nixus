@@ -46,7 +46,7 @@ in {
     };
   };
 
-  flake.tests.TopologicalSortSubgraph = {
+  flake.tests.TopologicalSortAncestors = {
     testCase1 = let
       graph = { 
         nodeA = []; 
