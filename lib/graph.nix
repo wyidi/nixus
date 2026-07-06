@@ -49,7 +49,7 @@
     inherit levels;
     inherit levels';
 
-    result = map (level: level.value) (sort (x: y: (toIntBase10 x.name) < (toIntBase10 y.name)) (attrsToList levels'));
+    result = map (level: sort (a: b: a < b) level.value) (sort (x: y: (toIntBase10 x.name) < (toIntBase10 y.name)) (attrsToList levels'));
   };
 
 in {
