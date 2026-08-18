@@ -16,8 +16,8 @@
     # A sink is a node that no other nodes depends on it
     sinks    = filter (x: graph'.${x} == []) vertices;
 
-    # Outputs list of minimum heights of each node in DAG (no cycle detection currently)
-    # TODO: add ancestors parameter to detect back edge
+    # Outputs list of minimum heights of each node in DAG
+    # TODO: add `ancestors` parameter to detect back edge (no cycle detection currently)
     getLevels = levels: queue:
       if queue == [] then
         levels
@@ -71,10 +71,10 @@
   };
 
   # Helper function (not exported)
-  # reverseAttrs is extracted from reverse function, so parameter names are not general
   reverseAttrs = graph: let 
-    # hint: neighbors is a set represented as list
+    # Note: reverseAttrs is extracted from reverse function, so parameter names are not general
     lst1 = mapAttrsToList (vertex: map (neighbor: { name = toString neighbor; value = [ vertex ]; })) graph;
+    # Hint: neighbors is a set represented as list
     lst2 = map listToAttrs lst1;
   in
     # uniqueStrings is not needed since duplicate will be removed at lst2
