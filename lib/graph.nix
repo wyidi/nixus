@@ -46,7 +46,42 @@
     result = map (level: sort (a: b: a < b) level.value) (sort (x: y: (toIntBase10 x.name) < (toIntBase10 y.name)) (attrsToList levels'));
   };
 
+  linearizeAncestors = levels: root: graph: let
+    dfs = visited: queue:
+      if queue == [] then
+        visited
+      else let e = head queue; in
+        if hasAttr e visited then
+          dfs visited (drop 1 queue)
+        else let parents = graph.${e}; in
+          if parents == [] then
+            dfs (visited // { ${e} = null; }) (drop 1 queue)
+          else let xs = filter (x: !(hasAttr x visited)) parents; in
+            if xs == [] then
+              dfs (visited // { ${e} = null; }) (drop 1 queue)
+            else
+              dfs visited (xs ++ queue);
+
+    visited = dfs { } [ root ];
+
+    partial_levels  = mapAttrs (node: _: levels.${node}) visited;
+    partial_levels' = reverseAttrs (mapAttrs (_: level: [level]) partial_levels);
+  in {
+    result = map (level: sort (a: b: a < b) level.value) (sort (x: y: (toIntBase10 x.name) < (toIntBase10 y.name)) (attrsToList partial_levels'));
+  };
+
+  # Helper function (not exported)
+  reverseAttrs = graph: let
+    # Note: reverseAttrs is extracted from reverse function, so parameter names are not general
+    lst1 = mapAttrsToList (vertex: map (neighbor: { name = toString neighbor; value = [ vertex ]; })) graph;
+    lst2 = map listToAttrs lst1;
+  in
+    # uniqueStrings is not needed since duplicate will be removed at lst2
+    zipAttrsWith (_: concatLists) lst2;
+
+
 in {
   inherit reverse;
   inherit linearize;
+  inherit linearizeAncestors;
 }
