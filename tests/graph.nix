@@ -1,5 +1,5 @@
 { nixus-lib, ... }: let
-  inherit (nixus-lib) reverse linearize;
+  inherit (nixus-lib) reverse linearize linearizeAncestors;
 in {
 
   flake.tests.ReverseGraph = {
@@ -76,6 +76,24 @@ in {
     in {
       expr     = (linearize graph).result or null;
       expected = [ [ "nodeA" "nodeC" ] [ "nodeB" "nodeD" ] [ "nodeE" ] [ "nodeF" ] ];
+    };
+  };
+
+
+  flake.tests.TopologicalSortAncestors = {
+    testCase1 = let
+      graph = {
+        nodeA = [];
+        nodeB = [ "nodeA" ];
+
+        nodeC = [];
+        nodeD = [ "nodeC" ];
+        nodeE = [ "nodeD" ];
+        nodeF = [ "nodeB" "nodeE" ];
+      };
+    in {
+      expr     = (linearizeAncestors ((linearize graph).levels) "nodeE" graph).result or null;
+      expected = [ [ "nodeC" ] [ "nodeD" ] [ "nodeE" ] ];
     };
   };
 
