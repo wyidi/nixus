@@ -8,7 +8,18 @@ in {
 
   options.colmena.meta = mkOption {
     type = types.submodule ({ ... }: {
-      freeformType = types.attrsOf types.anything;
+      options.nixpkgs = mkOption {
+        type = types.raw;
+      };
+
+      options.nodeSpecialArgs = mkOption {
+        type = types.attrsOf (types.attrsOf types.raw);
+      };
+
+      options.nodeNixpkgs = mkOption {
+        type = types.attrsOf types.raw;
+      };
+
     });
     default = {};
   };
