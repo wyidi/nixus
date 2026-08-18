@@ -51,7 +51,29 @@
     zipAttrsWith (_: concatLists) lst2;
 
 
+  # Outputs subgraph obtained by bfs
+  bfs = graph: root: let
+    bfs = visited: queue:
+      if queue == [] then
+        visited
+      else let e = head queue; in
+        if hasAttr e visited then
+          bfs visited (drop 1 queue)
+        else let parents = graph.${e}; in
+          if parents == [] then
+            bfs (visited // { ${e} = null; }) (drop 1 queue)
+          else let xs = filter (x: !(hasAttr x visited)) parents; in
+            if xs == [] then
+              bfs (visited // { ${e} = null; }) (drop 1 queue)
+            else
+              bfs visited (xs ++ queue);
+
+    visited = bfs { } [ root ];
+  in
+    mapAttrs (node: _: filter (parent: hasAttr parent visited) graph.${node}) visited;
+
 in {
   inherit reverse;
   inherit toposort;
+  inherit bfs;
 }
