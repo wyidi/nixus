@@ -2,6 +2,7 @@ nixus: { flake-parts-lib, ... }: {
   imports = [
     (nixus.inputs.import-tree ./tests)
     (nixus.inputs.nix-unit.modules.flake.default)
+    # assetModule is imported implicitly by importing flakeModule from top level
   ];
 
   # (Important) This config block prevents `nix flake check` from failing
