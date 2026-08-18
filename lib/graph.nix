@@ -1,7 +1,7 @@
 { lib, ... }: with lib; let
 
   reverse = graph: let 
-    # hint: neighbors is a set represented as list
+    # Hint: neighbors is a set represented as list
     lst1 = mapAttrsToList (vertex: map (neighbor: { name = neighbor; value = [ vertex ]; })) graph;
     lst2 = map listToAttrs lst1;
     lst3 = [(mapAttrs (_: _: []) graph)] ++ lst2; # ensure that node with no edge holds empty list
@@ -74,7 +74,6 @@
   reverseAttrs = graph: let 
     # Note: reverseAttrs is extracted from reverse function, so parameter names are not general
     lst1 = mapAttrsToList (vertex: map (neighbor: { name = toString neighbor; value = [ vertex ]; })) graph;
-    # Hint: neighbors is a set represented as list
     lst2 = map listToAttrs lst1;
   in
     # uniqueStrings is not needed since duplicate will be removed at lst2
