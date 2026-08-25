@@ -20,6 +20,10 @@ in {
         type = types.attrsOf types.raw;
       };
 
+      options.specialArgs = mkOption {
+        type = types.attrsOf types.raw;
+      };
+
       options.machinesFile = mkOption {
         type = types.path;
       };
