@@ -14,7 +14,7 @@
     };
   });
 
-  module_tf = types.submodule ({ ... }: {
+  module_tf = types.submodule ({ name, cfg, ... }: {
     options.backend = mkOption {
       type    = types.enum [ "terraform" "opentofu" ];
       default = "opentofu";
@@ -34,9 +34,13 @@
       readOnly = true;
       description = "Package of terraform/opentofu configuration.";
     };
+
+    config = {
+      config = cfg.terranix.package.config.${name};
+    };
   });
 
-  module_nix = types.submodule ({ ... }: {
+  module_nix = types.submodule ({ name, ... }: {
     options.requires = mkOption {
       type = types.listOf types.str;
       description = "List of required nodes.";
@@ -44,12 +48,13 @@
 
     options.name = mkOption {
       type     = types.str;
+      default  = name;
       readOnly = true;
       description = "Name of the nixos configuration.";
     };
   });
 
-  module_pb = types.submodule ({ ... }: {
+  module_pb = types.submodule ({ name, cfg, ... }: {
     options.requires = mkOption {
       type = types.listOf types.str;
       description = "List of required nodes.";
@@ -59,6 +64,10 @@
       type     = types.package;
       readOnly = true;
       description = "Package of ansible playbook.";
+    };
+
+    config = {
+      playbook = cfg.nixible.package.playbook.${name};
     };
   });
 
@@ -72,17 +81,23 @@ in {
   # The glue
   config = {
     perSystem = { config, ... }: {
-      nixus.node.tf = builtins.mapAttrs (name: value: {
-        config = config.terranix.package.config.${name};
-      }) config.nixus.node.tf;
+      nixus.node.tf = {
+        _module.args.cfg = {
+          terranix = config.terranix;
+        };
+      };
 
-      nixus.node.nix = builtins.mapAttrs (name: value: {
-        inherit name;
-      }) config.nixus.node.nix;
+      nixus.node.nix = {
+        _module.args.cfg = {
 
-      nixus.node.pb = builtins.mapAttrs (name: value: {
-        config = config.nixible.package.playbook.${name};
-      }) config.nixus.node.pb;
+        };
+      };
+
+      nixus.node.pb = {
+        _module.args.cfg = {
+          nixible = config.nixible;
+        };
+      };
     };
   }; 
 }
