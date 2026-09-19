@@ -1,4 +1,4 @@
-{ lib, flake-parts-lib, config, ... }: with lib; let
+{ lib, flake-parts-lib, ... }: with lib; let
   # The layer of indirection
   module_node = cfg: types.submodule ({ ... }: {
     options.tf = mkOption {
@@ -75,8 +75,10 @@ in {
   options.perSystem = flake-parts-lib.mkPerSystemOption ( { config, ... } : {
     options.nixus.node = mkOption {
       type = module_node {
-        terranix = config.terranix; 
-        nixible  = config.nixible;
+        # For tf type node
+        terranix = config.terranix;
+        # For pb type node
+        nixible = config.nixible;
       };
     };
   });
