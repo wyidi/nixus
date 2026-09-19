@@ -1,20 +1,20 @@
 { lib, flake-parts-lib, config, ... }: with lib; let
   # The layer of indirection
-  module_node = types.submodule ({ ... }: {
+  module_node = cfg: types.submodule ({ ... }: {
     options.tf = mkOption {
-      type = types.attrsOf module_tf;
+      type = types.attrsOf (module_tf cfg);
     };
 
     options.nix = mkOption {
-      type = types.attrsOf module_nix;
+      type = types.attrsOf (module_nix cfg);
     };
 
     options.pb = mkOption {
-      type = types.attrsOf module_pb;
+      type = types.attrsOf (module_pb cfg);
     };
   });
 
-  module_tf = types.submodule ({ name, cfg, ... }: {
+  module_tf = cfg: types.submodule ({ name, ... }: {
     options.backend = mkOption {
       type    = types.enum [ "terraform" "opentofu" ];
       default = "opentofu";
@@ -40,7 +40,7 @@
     };
   });
 
-  module_nix = types.submodule ({ name, ... }: {
+  module_nix = cfg: types.submodule ({ name, ... }: {
     options.requires = mkOption {
       type = types.listOf types.str;
       description = "List of required nodes.";
@@ -54,7 +54,7 @@
     };
   });
 
-  module_pb = types.submodule ({ name, cfg, ... }: {
+  module_pb = cfg: types.submodule ({ name, ... }: {
     options.requires = mkOption {
       type = types.listOf types.str;
       description = "List of required nodes.";
@@ -72,32 +72,12 @@
   });
 
 in {
-  options.perSystem = flake-parts-lib.mkPerSystemOption ( { ... } : {
+  options.perSystem = flake-parts-lib.mkPerSystemOption ( { config, ... } : {
     options.nixus.node = mkOption {
-      type = module_node;        
+      type = module_node {
+        terranix = config.terranix; 
+        nixible  = config.nixible;
+      };
     };
   });
-
-  # The glue
-  config = {
-    perSystem = { config, ... }: {
-      nixus.node.tf = {
-        _module.args.cfg = {
-          terranix = config.terranix;
-        };
-      };
-
-      nixus.node.nix = {
-        _module.args.cfg = {
-
-        };
-      };
-
-      nixus.node.pb = {
-        _module.args.cfg = {
-          nixible = config.nixible;
-        };
-      };
-    };
-  }; 
 }
