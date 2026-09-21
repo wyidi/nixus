@@ -15,11 +15,10 @@ enum Commands {
 }
 
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     let cli = Cli::parse();
 
     use std::process::Command;
-    use std::io::{self, Write};
 
     match &cli.command {
         Commands::Plan {} => {
@@ -27,25 +26,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .arg("--impure")
                 .arg("--json")
                 .arg("--expr")
-                .arg(
-                    r#"let
-                      flake = builtins.getFlake (toString ./.);
-                    in
-                      flake.nixus.${builtins.currentSystem}.API.TopoSort { }
+                .arg(r#"
+                let
+                    flake = builtins.getFlake (toString ./.);
+                in
+                    flake.nixus.${builtins.currentSystem}.API.TopoSort { }
                 "#)
-                .output()?;
+                .output()
+                .expect("Failed to spawn nix process");
 
             println!("status: {}", output.status);
-            io::stdout().write_all(&output.stdout)?;
-            io::stderr().write_all(&output.stderr)?;
 
-            Ok(())
+            use std::io::{self, Write};
+            io::stdout().write_all(&output.stdout).expect("Failed to stdout");
+            io::stderr().write_all(&output.stderr).expect("Failed to stderr");
         }
         Commands::Apply {} => {
-            Ok(())
+
         }
         Commands::Destroy {} => {
-            Ok(())
+
         }
     }
 }
