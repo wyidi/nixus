@@ -1,5 +1,5 @@
 nixus: { lib, ... }: let
-  nixus-lib-paths = lib.filter (n: lib.strings.hasSuffix ".nix" n && n != "default.nix") (lib.filesystem.listFilesRecursive ./.);
+  nixus-lib-paths = lib.filter (n: (lib.hasSuffix ".nix" n) && !(lib.hasSuffix "default.nix" n)) (lib.filesystem.listFilesRecursive ./.);
 
   nixus-lib = lib.fix (self: builtins.foldl' (a: b: a // b) {} (map (path: import path { inherit self; lib = lib'; } ) nixus-lib-paths));
 
