@@ -1,5 +1,5 @@
 nixus: { flake-parts-lib, ... }: let
-  assetModule = flake-parts-lib.importApply ./asset-module.nix nixus;
+  assetModule = flake-parts-lib.importApply ./lib nixus;
 in {
   imports = [
     (nixus.inputs.import-tree ./modules)
