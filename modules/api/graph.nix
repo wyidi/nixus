@@ -3,11 +3,15 @@
 in {
   config.flake = {
     nixus = genAttrs config.systems ( system: let
-      nodes = config.allSystems.${system}.nixus.node;
+      # nodes = config.allSystems.${system}.nixus.node;
+      nodes = builtins.concatLists (mapAttrsToList (_: v:
+        mapAttrsToList (_: trivial.id) v
+      ) config.allSystems.${system}.nixus.node);
 
-      graph = concatMapAttrs (type: value: mapAttrs' (name: value: 
-        nameValuePair "${type}.${name}" value.requires
-      ) value) nodes;
+      graph = concatMapAttrs (_: value: mapAttrs' (_: value: 
+        nameValuePair value.id value.requires
+      ) value) config.allSystems.${system}.nixus.node;
+
     in {
       API.TopoSort = ({ Tail ? null }: let
         order = linearize graph; 
@@ -30,7 +34,7 @@ in {
           inherit nodes;
         } else {
           order = flatten (linearizeAncestors order.levels Tail graph).result;
-          nodes = TODO;
+          inherit nodes;
         }
       );
     });

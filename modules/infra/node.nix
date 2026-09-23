@@ -14,7 +14,9 @@
     };
   });
 
-  module_tf = cfg: types.submodule ({ name, ... }: {
+  module_tf = cfg: types.submodule ({ ... }: {
+    imports = [ module_common ];
+
     options.backend = mkOption {
       type    = types.enum [ "terraform" "opentofu" ];
       default = "opentofu";
@@ -24,11 +26,6 @@
       '';
     };
 
-    options.requires = mkOption {
-      type = types.listOf types.str;
-      description = "List of required nodes.";
-    };
-
     options.config = mkOption {
       type     = types.package;
       readOnly = true;
@@ -36,29 +33,21 @@
     };
 
     config = {
+      type = "terraform";
       config = cfg.terranix.package.config.${name};
     };
   });
 
-  module_nix = cfg: types.submodule ({ name, ... }: {
-    options.requires = mkOption {
-      type = types.listOf types.str;
-      description = "List of required nodes.";
-    };
+  module_nix = cfg: types.submodule ({ ... }: {
+    imports = [ module_common ];
 
-    options.name = mkOption {
-      type     = types.str;
-      default  = name;
-      readOnly = true;
-      description = "Name of the nixos configuration.";
+    config = {
+      type = "nixos";
     };
   });
 
-  module_pb = cfg: types.submodule ({ name, ... }: {
-    options.requires = mkOption {
-      type = types.listOf types.str;
-      description = "List of required nodes.";
-    };
+  module_pb = cfg: types.submodule ({ ... }: {
+    imports = [ module_common ];
 
     options.playbook = mkOption {
       type     = types.package;
@@ -67,9 +56,40 @@
     };
 
     config = {
+      type = "ansible";
       playbook = cfg.nixible.package.playbook.${name};
     };
   });
+
+  module_common = { name, config, ... }: {
+    options.requires = mkOption {
+      type = types.listOf types.str;
+      description = "List of required nodes.";
+    };
+
+    options.type = mkOption {
+      type     = types.enum [ "terraform" "nixos" "ansible" ];
+      readOnly = true;
+      description = "Type of the configuration.";
+    };
+
+    options.name = mkOption {
+      type     = types.str;
+      default  = name;
+      readOnly = true;
+      description = "Name of the configuration.";
+    };
+
+    options.id = mkOption {
+      type     = types.str;
+      readOnly = true;
+      description = "Identifier of the configuration.";
+    };
+
+    config = {
+      id = config.type + "." + config.name;
+    };
+  };
 
 in {
   options.perSystem = flake-parts-lib.mkPerSystemOption ( { config, ... } : {
