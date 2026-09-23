@@ -24,6 +24,16 @@ enum Node {
     Ansible   { id: String, name: String, requires: Vec<String>, config : String, },
 }
 
+impl Node {
+    fn id(&self) -> &str {
+        match self {
+            Node::Terraform { id, .. } => id,
+            Node::NixOS     { id, .. } => id,
+            Node::Ansible   { id, .. } => id,
+        }
+    }
+}
+
 
 #[derive(Deserialize, Debug)]
 struct Plan {
@@ -31,7 +41,7 @@ struct Plan {
     order: Vec<String>,
 }
 
-fn topological_sort() {
+fn topological_sort() -> Plan {
     use std::process::Command;
 
     let output = Command::new("nix")
@@ -46,25 +56,35 @@ fn topological_sort() {
             flake.nixus.${builtins.currentSystem}.API.TopoSort { }
         "#)
         .output()
-        .expect("Failed to call nixus TopoSort API");
+        .expect("Failed to start evaluation");
 
-    println!("status: {}", output.status);
+    if !output.status.success() {
+        panic!("Failed to call TopoSort API");
+    }
 
-    use std::io::{self, Write};
-    io::stdout().write_all(&output.stdout).expect("Failed to write at stdout");
-    io::stderr().write_all(&output.stderr).expect("Failed to write at stderr");
+    let plan: Plan = serde_json::from_str(
+        &String::from_utf8(output.stdout).expect("API output is not valid UTF-8")
+    ).unwrap();
 
-    let plan: Plan = serde_json::from_str(&String::from_utf8(output.stdout).expect("not valid UTF8")).unwrap();
-    println!("deserialized = {:?}", plan);
+    println!("{:?}", plan);
 
+    plan
 }
 
 fn main() {
     let cli = Cli::parse();
 
+    use std::collections::HashMap;
+
     match &cli.command {
         Commands::Plan {} => {
-            topological_sort(); 
+            let plan = topological_sort();
+
+            let mut nodes = HashMap::new();
+
+            for (idx, node) in plan.nodes.iter().enumerate() {
+                nodes.insert(node.id(), idx);
+            }
         }
         Commands::Apply {} => {
 
