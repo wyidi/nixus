@@ -1,6 +1,6 @@
 nixus: { flake-parts-lib, lib, ... }: {
   imports = [
-    (nixus.inputs.import-tree.filterNot (lib.hasSuffix "default.nix") ./.)
+    (nixus.inputs.import-tree ./flake)
     (nixus.inputs.nix-unit.modules.flake.default)
     # assetModule is imported implicitly by importing flakeModule from top level
   ];
