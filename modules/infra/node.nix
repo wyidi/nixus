@@ -14,7 +14,7 @@
     };
   });
 
-  module_tf = cfg: types.submodule ({ ... }: {
+  module_tf = cfg: types.submodule ({ name, ... }: {
     imports = [ module_common ];
 
     options.backend = mkOption {
@@ -33,7 +33,7 @@
     };
 
     config = {
-      type = "terraform";
+      type = "Terraform";
       config = cfg.terranix.package.config.${name};
     };
   });
@@ -42,7 +42,7 @@
     imports = [ module_common ];
 
     config = {
-      type = "nixos";
+      type = "NixOS";
     };
   });
 
@@ -56,7 +56,7 @@
     };
 
     config = {
-      type = "ansible";
+      type = "Ansible";
       playbook = cfg.nixible.package.playbook.${name};
     };
   });
@@ -68,7 +68,7 @@
     };
 
     options.type = mkOption {
-      type     = types.enum [ "terraform" "nixos" "ansible" ];
+      type     = types.enum [ "Terraform" "NixOS" "Ansible" ];
       readOnly = true;
       description = "Type of the configuration.";
     };
