@@ -7,4 +7,20 @@ inputs:
       imports = [
         inputs.nixus.flakeModule
       ];
+
+
+      perSystem = { ... }: {
+        nixus.node.tf = {
+          "ProxmoxVM.example" = {
+
+          };
+        };
+
+        terranix.config = {
+          "ProxmoxVM.example" = {
+
+          };
+        };
+      };
+
   })

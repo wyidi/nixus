@@ -61,6 +61,7 @@ fn example() {
 
     println!("{}", &String::from_utf8(output.stdout).expect("API output is not valid UTF-8"));
 
+    nixus::topological_sort(Some(tmp_dir.path()));
 
     assert_eq!(2+3, 5);
 }
