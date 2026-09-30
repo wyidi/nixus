@@ -61,7 +61,24 @@ fn example() {
 
     println!("{}", &String::from_utf8(output.stdout).expect("API output is not valid UTF-8"));
 
-    nixus::topological_sort(Some(tmp_dir.path()));
+    let path = std::env::current_dir().unwrap();
+    std::env::set_current_dir(tmp_dir.path());
+    let plan = nixus::topological_sort();
+    std::env::set_current_dir(path);
 
-    assert_eq!(2+3, 5);
+
+    assert_eq!(plan, nixus::Plan {
+        nodes: vec![ 
+            nixus::Node::Terraform {
+                id: "Terraform.ProxmoxVM.example".to_string(), 
+                name: "ProxmoxVM.example".to_string(), 
+                requires: vec![],
+                config: "/nix/store/7h87p89n8l6lvz99zagh0sq363fh1xl5-ProxmoxVM.example".to_string(),
+                backend: "opentofu".to_string()
+            }
+        ],
+        order: vec![
+            "Terraform.ProxmoxVM.example".to_string()
+        ],
+    });
 }
