@@ -3,9 +3,9 @@ use serde::Deserialize;
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(tag = "type")]
 pub enum Node {
-    Terraform { id: String, name: String, requires: Vec<String>, config : String, backend: String, },
+    Terraform { id: String, name: String, requires: Vec<String>, config: String, backend: String, },
     NixOS     { id: String, name: String, requires: Vec<String>, },
-    Ansible   { id: String, name: String, requires: Vec<String>, config : String, },
+    Ansible   { id: String, name: String, requires: Vec<String>, config: String, },
 }
 
 impl Node {
@@ -14,6 +14,23 @@ impl Node {
             Node::Terraform { id, .. } => id,
             Node::NixOS     { id, .. } => id,
             Node::Ansible   { id, .. } => id,
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        match self {
+            Node::Terraform { name, .. } => name,
+            Node::NixOS     { name, .. } => name,
+            Node::Ansible   { name, .. } => name,
+        }
+    }
+
+
+    pub fn requires(&self) -> &Vec<String> {
+        match self {
+            Node::Terraform { requires, .. } => requires,
+            Node::NixOS     { requires, .. } => requires,
+            Node::Ansible   { requires, .. } => requires,
         }
     }
 }
@@ -25,7 +42,7 @@ pub struct Plan {
     pub order: Vec<String>,
 }
 
-pub fn topological_sort() -> Plan {
+pub fn toposort() -> Plan {
     use std::process::Command;
 
     let output = Command::new("nix")

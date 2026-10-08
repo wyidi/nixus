@@ -12,6 +12,11 @@
     options.pb = mkOption {
       type = types.attrsOf (module_pb cfg);
     };
+
+    # The empty service module
+    options.svc = mkOption {
+      type = types.attrsOf module_svc;
+    };
   });
 
   module_tf = cfg: types.submodule ({ name, ... }: {
@@ -61,6 +66,14 @@
     };
   });
 
+  module_svc = types.submodule ({ ... }: {
+    imports = [ module_common ];
+
+    config = {
+      type = "Service";
+    };
+  });
+
   module_common = { name, config, ... }: {
     options.requires = mkOption {
       type = types.listOf types.str;
@@ -68,7 +81,7 @@
     };
 
     options.type = mkOption {
-      type     = types.enum [ "Terraform" "NixOS" "Ansible" ];
+      type     = types.enum [ "Terraform" "NixOS" "Ansible" "Service" ];
       readOnly = true;
       description = "Type of the configuration.";
     };
@@ -84,6 +97,18 @@
       type     = types.str;
       readOnly = true;
       description = "Identifier of the configuration.";
+    };
+
+    #options.service = mkOption {
+    #  type     = types.str;
+    #  readOnly = true;
+    #  description = "The service that uses this node as component.";
+    #};
+
+    options.disabled = mkOption {
+      type    = types.bool;
+      default = false;
+      description = "Whether this node disabled or not.";
     };
 
     config = {

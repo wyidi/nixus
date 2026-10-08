@@ -63,7 +63,7 @@ fn example() {
 
     let path = std::env::current_dir().unwrap();
     std::env::set_current_dir(tmp_dir.path());
-    let plan = nixus::topological_sort();
+    let plan = nixus::toposort();
     std::env::set_current_dir(path);
 
 

@@ -26,7 +26,7 @@ fn main() {
             std::fs::create_dir(".nixus").unwrap();
         }
         Commands::Plan {} => {
-            let plan = nixus::topological_sort();
+            let plan = nixus::toposort();
 
             let mut nodes = HashMap::new();
 
@@ -43,7 +43,9 @@ fn main() {
                 match plan.nodes.get(*nodeIdx).unwrap() {
                     nixus::Node::Terraform { id, name, requires, config, backend } => {
                         // need to first copy the config to local directory under .nixus
-                        std::fs::soft_link(config, ".nixus".to_owned() + &name).unwrap();
+
+                        let cfgdir = ".nixus/".to_owned() + &name;
+                        std::fs::soft_link(config, cfgdir.clone() + "/" + "config.tf.json").unwrap();
 
                         let mut cmd = if backend == "opentofu" { 
                             let mut cmd = Command::new("tofu");
@@ -58,6 +60,8 @@ fn main() {
                         } else {
                             unreachable!()
                         };
+
+                        cmd.current_dir(std::path::Path::new(&cfgdir));
 
                         let output = cmd
                             .output()
