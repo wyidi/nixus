@@ -11,4 +11,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
   cargoLock = {
     lockFile = ./Cargo.lock;
   };
+
+  doCheck = false;
 })

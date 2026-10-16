@@ -33,7 +33,7 @@
           ];
         };
 
-        packages.nixus = pkgs.callPackage ./package.nix { }
+        packages.nixus = pkgs.callPackage ./package.nix { };
       };
 
     });
