@@ -33,7 +33,7 @@ in {
           order = flatten order.result;
           inherit nodes;
         } else {
-          order = flatten (linearizeAncestors order.levels Tail graph).result;
+          order = flatten (linearizeAncestors order.levels Tail graph').result;
           inherit nodes;
         }
       );
