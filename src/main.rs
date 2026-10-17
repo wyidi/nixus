@@ -49,7 +49,7 @@ fn main() {
                         let mut cmd = {
                             let mut cmd = Command::new("nix");
                             cmd.arg("build");
-                            cmd.arg(format!(".#packages.aarch64-darwin.terranix.{}", name));
+                            cmd.arg(format!(".#nixus.aarch64-darwin.terranix.{}", name));
                             cmd.arg("-o config.tf.json");
 
                             cmd
