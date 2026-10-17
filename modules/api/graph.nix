@@ -13,6 +13,11 @@ in {
       ) value) config.allSystems.${system}.nixus.node;
 
     in {
+      plan = {
+        order = flatten (linearize graph).result;
+        inherit nodes;
+      };
+
       API.TopoSort = ({ Tail ? null }: let
         order = linearize graph; 
       in
