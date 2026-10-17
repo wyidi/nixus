@@ -61,7 +61,6 @@ fn main() {
                             .output()
                             .expect("Failed to build config");
 
-
                         //std::fs::soft_link(config, cfgdir.clone() + "/" + "config.tf.json").unwrap();
 
                         let mut cmd = if backend == "opentofu" {
