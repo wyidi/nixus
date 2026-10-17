@@ -18,6 +18,13 @@ in {
         inherit nodes;
       };
 
+
+      terranix = let
+        cfg = config.allSystems.${system}.terranix;
+      in 
+        cfg.package.config;
+
+
       API.TopoSort = ({ Tail ? null }: let
         order = linearize graph; 
       in
