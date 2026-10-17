@@ -79,5 +79,9 @@ in {
     };
   in {
     terranix.package.config = mapAttrs mkConfig cfg.config;
+
+    packages = lib.mkIf (cfg.package.config != {}) {
+      terranix = cfg.package.config;
+    };
   };
 }
