@@ -46,6 +46,8 @@ fn main() {
 
                         let cfgdir = ".nixus/".to_owned() + &name;
 
+                        // TODO: should remove config.tf.json file or symlink if already exists
+
                         let mut cmd = {
                             let mut cmd = Command::new("nix");
                             cmd.arg("build");
@@ -57,9 +59,12 @@ fn main() {
 
                         cmd.current_dir(std::path::Path::new(&cfgdir));
 
-                        let mut output = cmd
-                            .output()
-                            .expect("Failed to build config");
+                        let mut child = cmd
+                            .spawn()
+                            .expect("Failed to spawn build config");
+                        
+                        child.wait()
+                             .expect("Failed to wait build config finish");
 
                         //std::fs::soft_link(config, cfgdir.clone() + "/" + "config.tf.json").unwrap();
 
@@ -81,9 +86,12 @@ fn main() {
 
                         cmd.current_dir(std::path::Path::new(&cfgdir));
 
-                        let mut output = cmd
-                            .output()
+                        child = cmd
+                            .spawn()
                             .expect("Failed to init terraform config");
+
+                        child.wait()
+                             .expect("Failed to wait init terraform config");
 
                         cmd = if backend == "opentofu" {
                             let mut cmd = Command::new("tofu");
@@ -101,9 +109,12 @@ fn main() {
 
                         cmd.current_dir(std::path::Path::new(&cfgdir));
 
-                        output = cmd
-                            .output()
+                        child = cmd
+                            .spawn()
                             .expect("Failed to start planning");
+
+                        child.wait()
+                             .expect("Failed to wait planning");
                     }
                     nixus::Node::NixOS     { id, .. } => (),
                     nixus::Node::Ansible   { id, .. } => (),
@@ -150,9 +161,12 @@ fn main() {
 
                         cmd.current_dir(std::path::Path::new(&cfgdir));
 
-                        let mut output = cmd
-                            .output()
+                        let mut child = cmd
+                            .spawn()
                             .expect("Failed to init terraform config. Try to include terraform/tofu cli from nixpkgs to devShell.");
+
+                        child.wait()
+                             .expect("Failed to wait init terraform config");
 
                         cmd = if backend == "opentofu" {
                             let mut cmd = Command::new("tofu");
@@ -170,18 +184,25 @@ fn main() {
 
                         cmd.current_dir(std::path::Path::new(&cfgdir));
 
-                        output = cmd
-                            .output()
-                            .expect("Failed to start planning");
+                        child = cmd
+                            .spawn()
+                            .expect("Failed to start applying");
+
+                        child.wait()
+                             .expect("Failed to wait apply");
+                              
                     }
                     nixus::Node::NixOS     { id, name, .. } => {
                         let mut cmd = Command::new("colmena");
                         cmd.arg("apply");
                         cmd.arg(format!("--on {}", name));
 
-                        let output = cmd
-                            .output()
+                        let mut child = cmd
+                            .spawn()
                             .expect("Failed to deploy nixos via colmena. Try to include config.colmena.package.colmena in devShell.");
+
+                        child.wait()
+                             .expect("Failed to wait colmena");
 
                     }
                     nixus::Node::Ansible   { id, .. } => {
