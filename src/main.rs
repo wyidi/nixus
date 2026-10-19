@@ -149,7 +149,36 @@ fn main() {
                         // need to first copy the config to local directory under .nixus
 
                         let cfgdir = ".nixus/".to_owned() + &name;
-                        std::fs::soft_link(config, cfgdir.clone() + "/" + "config.tf.json").unwrap();
+
+                        // TODO: should remove config.tf.json file or symlink if already exists
+                        match std::fs::remove_file(cfgdir.to_owned() + "/config.tf.json") {
+                            Ok(()) => (),
+                            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                                ()
+                            }
+                            Err(_) => todo!(),
+                        };
+
+                        let mut cmd = {
+                            let mut cmd = Command::new("nix");
+                            cmd.arg("build");
+                            cmd.arg(format!(".#nixus.aarch64-darwin.terranix.{}", name));
+                            cmd.arg("-o");
+                            cmd.arg("config.tf.json");
+
+                            cmd
+                        };
+
+                        cmd.current_dir(std::path::Path::new(&cfgdir));
+
+                        let mut child = cmd
+                            .spawn()
+                            .expect("Failed to spawn build config");
+                        
+                        child.wait()
+                             .expect("Failed to wait build config finish");
+
+
 
                         let mut cmd = if backend == "opentofu" {
                             let mut cmd = Command::new("tofu");
