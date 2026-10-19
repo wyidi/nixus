@@ -47,9 +47,11 @@ fn main() {
                         let cfgdir = ".nixus/".to_owned() + &name;
 
                         // TODO: should remove config.tf.json file or symlink if already exists
-                        match std::fs::remove_file(cfgdir + "/config.tf.json") {
+                        match std::fs::remove_file(cfgdir.to_owned() + "/config.tf.json") {
                             Ok(()) => (),
-                            Err(std::io::ErrorKind::NotFound) => (),
+                            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                                ()
+                            }
                             Err(_) => todo!(),
                         };
 
