@@ -47,12 +47,18 @@ fn main() {
                         let cfgdir = ".nixus/".to_owned() + &name;
 
                         // TODO: should remove config.tf.json file or symlink if already exists
+                        match std::fs::remove_file(cfgdir + "/config.tf.json") {
+                            Ok(()) => (),
+                            Err(std::io::ErrorKind::NotFound) => (),
+                            Err(_) => todo!(),
+                        };
 
                         let mut cmd = {
                             let mut cmd = Command::new("nix");
                             cmd.arg("build");
                             cmd.arg(format!(".#nixus.aarch64-darwin.terranix.{}", name));
-                            cmd.arg("-o config.tf.json");
+                            cmd.arg("-o");
+                            cmd.arg("config.tf.json");
 
                             cmd
                         };
@@ -195,7 +201,8 @@ fn main() {
                     nixus::Node::NixOS     { id, name, .. } => {
                         let mut cmd = Command::new("colmena");
                         cmd.arg("apply");
-                        cmd.arg(format!("--on {}", name));
+                        cmd.arg("--on");
+                        cmd.arg(format!("{}", name));
 
                         let mut child = cmd
                             .spawn()
