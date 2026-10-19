@@ -31,15 +31,15 @@
       '';
     };
 
-    options.config = mkOption {
-      type     = types.package;
-      readOnly = true;
-      description = "Package of terraform/opentofu configuration.";
-    };
+    #options.config = mkOption {
+    #  type     = types.package;
+    #  readOnly = true;
+    #  description = "Package of terraform/opentofu configuration.";
+    #};
 
     config = {
       type = "Terraform";
-      config = cfg.terranix.package.config.${name};
+      #config = cfg.terranix.package.config.${name};
     };
   });
 
@@ -54,15 +54,15 @@
   module_pb = cfg: types.submodule ({ ... }: {
     imports = [ module_common ];
 
-    options.playbook = mkOption {
-      type     = types.package;
-      readOnly = true;
-      description = "Package of ansible playbook.";
-    };
+    #options.playbook = mkOption {
+    #  type     = types.package;
+    #  readOnly = true;
+    #  description = "Package of ansible playbook.";
+    #};
 
     config = {
       type = "Ansible";
-      playbook = cfg.nixible.package.playbook.${name};
+      #playbook = cfg.nixible.package.playbook.${name};
     };
   });
 

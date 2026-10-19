@@ -80,4 +80,10 @@ in {
   in {
     terranix.package.config = mapAttrs mkConfig cfg.config;
   };
+
+  config.flake.terranix = genAttrs config.systems (system: let
+    cfg = config.allSystems.${system}.terranix;
+  in {
+    config = cfg.package.config;
+  });
 }
