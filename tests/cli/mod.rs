@@ -73,7 +73,6 @@ fn example() {
                 id: "Terraform.ProxmoxVM.example".to_string(), 
                 name: "ProxmoxVM.example".to_string(), 
                 requires: vec![],
-                config: "/nix/store/7h87p89n8l6lvz99zagh0sq363fh1xl5-ProxmoxVM.example".to_string(),
                 backend: "opentofu".to_string()
             }
         ],

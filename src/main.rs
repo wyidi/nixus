@@ -21,6 +21,7 @@ fn main() {
     use std::process::Command;
     use std::collections::HashMap;
 
+
     match &cli.command {
         Commands::Init {} => {
             std::fs::create_dir(".nixus").unwrap();
@@ -37,16 +38,14 @@ fn main() {
             // traverse list
             for nodeId in plan.order.iter() {
                 let nodeIdx = nodes.get(nodeId as &str).unwrap();
-                println!("{}", nodeIdx);
 
-                // match node and plan
                 match plan.nodes.get(*nodeIdx).unwrap() {
-                    nixus::Node::Terraform { id, name, requires, config, backend } => {
-                        // need to first copy the config to local directory under .nixus
+                    nixus::Node::Terraform { id, name, requires, backend } => {
 
+                        // The workspace for child processes
                         let cfgdir = ".nixus/".to_owned() + &name;
 
-                        // TODO: should remove config.tf.json file or symlink if already exists
+                        // Removes config.tf.json if previously created
                         match std::fs::remove_file(cfgdir.to_owned() + "/config.tf.json") {
                             Ok(()) => (),
                             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
@@ -55,10 +54,11 @@ fn main() {
                             Err(_) => todo!(),
                         };
 
+                        // build terraform config and symlink to config.tf.json under workspace
                         let mut cmd = {
                             let mut cmd = Command::new("nix");
                             cmd.arg("build");
-                            cmd.arg(format!(".#nixus.aarch64-darwin.terranix.{}", name));
+                            cmd.arg(format!(".#terranix.{}.config.{}", nixus::eval_flake_system(), name));
                             cmd.arg("-o");
                             cmd.arg("config.tf.json");
 
@@ -74,7 +74,6 @@ fn main() {
                         child.wait()
                              .expect("Failed to wait build config finish");
 
-                        //std::fs::soft_link(config, cfgdir.clone() + "/" + "config.tf.json").unwrap();
 
                         let mut cmd = if backend == "opentofu" {
                             let mut cmd = Command::new("tofu");
@@ -145,7 +144,7 @@ fn main() {
 
                 // match node and plan
                 match plan.nodes.get(*nodeIdx).unwrap() {
-                    nixus::Node::Terraform { id, name, requires, config, backend } => {
+                    nixus::Node::Terraform { id, name, requires, backend } => {
                         // need to first copy the config to local directory under .nixus
 
                         let cfgdir = ".nixus/".to_owned() + &name;
@@ -162,7 +161,7 @@ fn main() {
                         let mut cmd = {
                             let mut cmd = Command::new("nix");
                             cmd.arg("build");
-                            cmd.arg(format!(".#nixus.aarch64-darwin.terranix.{}", name));
+                            cmd.arg(format!(".#terranix.{}.config.{}", nixus::eval_flake_system(), name));
                             cmd.arg("-o");
                             cmd.arg("config.tf.json");
 
