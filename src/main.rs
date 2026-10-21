@@ -123,8 +123,8 @@ fn main() {
                         child.wait()
                              .expect("Failed to wait planning");
                     }
-                    nixus::Node::NixOS     { id, .. } => (),
-                    nixus::Node::Ansible   { id, .. } => (),
+                    nixus::Node::NixOS     { .. } => (),
+                    nixus::Node::Ansible   { .. } => (),
                 };
             }
         }
