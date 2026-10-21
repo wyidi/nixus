@@ -6,6 +6,7 @@ pub enum Node {
     Terraform { id: String, name: String, requires: Vec<String>, backend: String },
     NixOS     { id: String, name: String, requires: Vec<String>, },
     Ansible   { id: String, name: String, requires: Vec<String>, },
+    Service   { id: String, name: String, requires: Vec<String>, },
 }
 
 impl Node {
@@ -14,6 +15,7 @@ impl Node {
             Node::Terraform { id, .. } => id,
             Node::NixOS     { id, .. } => id,
             Node::Ansible   { id, .. } => id,
+            Node::Service   { id, .. } => id,
         }
     }
 
@@ -22,6 +24,7 @@ impl Node {
             Node::Terraform { name, .. } => name,
             Node::NixOS     { name, .. } => name,
             Node::Ansible   { name, .. } => name,
+            Node::Service   { name, .. } => name,
         }
     }
 
@@ -31,6 +34,7 @@ impl Node {
             Node::Terraform { requires, .. } => requires,
             Node::NixOS     { requires, .. } => requires,
             Node::Ansible   { requires, .. } => requires,
+            Node::Service   { requires, .. } => requires,
         }
     }
 }
