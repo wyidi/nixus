@@ -1,6 +1,8 @@
+mod core;
+
 #[test]
-fn example() {
-    let flake = super::core::get_flake();
+fn plan_one_tf_node() {
+    let flake = core::get_flake();
 
     let tmp_dir = tempfile::tempdir().unwrap();
     println!("{}", tmp_dir.path().display());
@@ -10,7 +12,7 @@ fn example() {
     let mut path = std::path::PathBuf::from(file!());
     path.pop();
     path.push("fixtures");
-    path.push("outputs.nix");
+    path.push("outputs01.nix");
 
     std::fs::copy(path, tmp_dir.path().join("outputs.nix")).unwrap();
 

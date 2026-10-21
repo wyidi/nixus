@@ -16,3 +16,7 @@ serde = { version = "1.0", features = ["derive"] }
 tempfile = "3.0"     # temporary directory crate
 minijinja = "2.24.0" # jinja2 template engine
 #-------------------------
+
+[[test]]
+name = "integration"
+path = "tests/cli/integration.rs"
