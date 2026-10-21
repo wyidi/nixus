@@ -69,27 +69,24 @@
     options.type = mkOption {
       type     = types.enum [ "Terraform" "NixOS" "Ansible" "Service" ];
       readOnly = true;
-      description = "Type of the configuration.";
+      description = "Type of the node.";
     };
 
     options.name = mkOption {
       type     = types.str;
       default  = name;
       readOnly = true;
-      description = "Name of the configuration.";
+      description = "Name of the node.";
     };
 
     options.id = mkOption {
       type     = types.str;
       readOnly = true;
-      description = "Identifier of the configuration.";
+      description = ''
+        Identifier of the node.
+        Automatically derived from type and name.
+      '';
     };
-
-    #options.service = mkOption {
-    #  type     = types.str;
-    #  readOnly = true;
-    #  description = "The service that uses this node as component.";
-    #};
 
     options.disabled = mkOption {
       type    = types.bool;
@@ -106,8 +103,8 @@ in {
   options.perSystem = flake-parts-lib.mkPerSystemOption ( { config, ... } : {
     options.nixus.node = mkOption {
       type = module_node {
-        terranix = config.terranix; 
-        nixible  = config.nixible;
+        terranix = config.terranix; # For tf type node
+        nixible  = config.nixible;  # For pb type node
       };
     };
   });
