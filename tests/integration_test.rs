@@ -1,2 +1,2 @@
-mod common;
+mod infra;
 mod integration_example;

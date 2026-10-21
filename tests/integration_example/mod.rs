@@ -1,6 +1,6 @@
 #[test]
 fn example() {
-    let flake = super::common::get_flake();
+    let flake = super::infra::get_flake();
 
     let tmp_dir = tempfile::tempdir().unwrap();
     println!("{}", tmp_dir.path().display());
