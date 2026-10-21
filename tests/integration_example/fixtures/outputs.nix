@@ -8,7 +8,6 @@ inputs:
         inputs.nixus.flakeModule
       ];
 
-
       perSystem = { ... }: {
         nixus.node.tf = {
           "ProxmoxVM.example" = {
@@ -18,7 +17,7 @@ inputs:
 
         terranix.config = {
           "ProxmoxVM.example" = {
-
+            # configuration omitted
           };
         };
       };

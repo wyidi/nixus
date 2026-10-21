@@ -31,15 +31,8 @@
       '';
     };
 
-    #options.config = mkOption {
-    #  type     = types.package;
-    #  readOnly = true;
-    #  description = "Package of terraform/opentofu configuration.";
-    #};
-
     config = {
       type = "Terraform";
-      #config = cfg.terranix.package.config.${name};
     };
   });
 
@@ -54,15 +47,8 @@
   module_pb = cfg: types.submodule ({ ... }: {
     imports = [ module_common ];
 
-    #options.playbook = mkOption {
-    #  type     = types.package;
-    #  readOnly = true;
-    #  description = "Package of ansible playbook.";
-    #};
-
     config = {
       type = "Ansible";
-      #playbook = cfg.nixible.package.playbook.${name};
     };
   });
 
@@ -108,7 +94,7 @@
     options.disabled = mkOption {
       type    = types.bool;
       default = false;
-      description = "Whether this node disabled or not.";
+      description = "Whether this node is disabled.";
     };
 
     config = {

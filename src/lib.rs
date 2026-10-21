@@ -5,7 +5,7 @@ use serde::Deserialize;
 pub enum Node {
     Terraform { id: String, name: String, requires: Vec<String>, backend: String },
     NixOS     { id: String, name: String, requires: Vec<String>, },
-    Ansible   { id: String, name: String, requires: Vec<String> },
+    Ansible   { id: String, name: String, requires: Vec<String>, },
 }
 
 impl Node {
@@ -46,7 +46,6 @@ pub struct Plan {
 use std::process::Command;
 
 pub fn toposort() -> Plan {
-
 
     // pure flake output attribute evaluation
     let output = Command::new("nix")

@@ -14,9 +14,9 @@ in {
 
     in {
 
-      # Evaluates to topological sorted deploy graph
       plan = {
         inherit nodes;
+        # Evaluated to topologically sort of deploy graph
         order = flatten (linearize graph).result;
       };
 
