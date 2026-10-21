@@ -123,8 +123,9 @@ fn main() {
                         child.wait()
                              .expect("Failed to wait planning");
                     }
-                    nixus::Node::NixOS     { .. } => (),
-                    nixus::Node::Ansible   { .. } => (),
+                    nixus::Node::NixOS   { .. } => (),
+                    nixus::Node::Ansible { .. } => (),
+                    nixus::Node::Service { .. } => (),
                 };
             }
         }
@@ -228,7 +229,7 @@ fn main() {
                              .expect("Failed to wait apply");
                               
                     }
-                    nixus::Node::NixOS     { id, name, .. } => {
+                    nixus::Node::NixOS { id, name, .. } => {
                         let mut cmd = Command::new("colmena");
                         cmd.arg("apply");
                         cmd.arg("--on");
@@ -242,15 +243,16 @@ fn main() {
                              .expect("Failed to wait colmena");
 
                     }
-                    nixus::Node::Ansible   { id, .. } => {
+                    nixus::Node::Ansible { id, .. } => {
                         todo!()
                     },
+                    nixus::Node::Service { .. } => (),
                 };
             }
 
         }
         Commands::Destroy {} => {
-
+            todo!()
         }
     }
 }
