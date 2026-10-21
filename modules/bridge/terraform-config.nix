@@ -1,4 +1,4 @@
-{ lib, flake-parts-lib, ... }: with lib; let
+{ lib, flake-parts-lib, config, ... }: with lib; let
   module_config = types.submodule ({ ... }: {
     freeformType = types.attrsOf types.anything;
   });
