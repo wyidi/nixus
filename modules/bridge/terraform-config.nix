@@ -76,6 +76,8 @@ in {
       installPhase = ''
         terranix ${code} > $out
       '';
+
+      allowSubstitutes = false; # prevent querying cache
     };
   in {
     terranix.package.config = mapAttrs mkConfig cfg.config;
