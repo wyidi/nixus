@@ -1,0 +1,10 @@
+{
+  inputs = {
+    nixus.url = "{{ nixus_url }}";
+
+    nixpkgs     = { follows = "nixus/nixpkgs";     };
+    flake-parts = { follows = "nixus/flake-parts"; };
+  };
+
+  outputs = inputs: import ./outputs.nix inputs;
+}
