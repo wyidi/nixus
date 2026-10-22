@@ -6,3 +6,11 @@ edition = "2024"
 [dependencies]
 # cli argument parser
 clap = { version = "4.6.7", features = ["derive"] }
+#----test dependencies----
+tempfile = "3.0"     # temporary directory crate
+minijinja = "2.24.0" # jinja2 template engine
+#-------------------------
+
+[[test]]
+name = "integration"
+path = "tests/cli/integration.rs"
