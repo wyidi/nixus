@@ -1,4 +1,4 @@
-{ lib, flake-parts-lib, ... }: with lib; let
+{ lib, flake-parts-lib, config, ... }: with lib; let
   module_config = types.submodule ({ ... }: {
     freeformType = types.attrsOf types.anything;
   });
@@ -48,4 +48,10 @@ in {
   in {
     terranix.package.config = mapAttrs mkConfig cfg.config;
   };
+
+  config.flake.terranix = genAttrs config.systems (system: let
+    cfg = config.allSystems.${system}.terranix;
+  in {
+    config = cfg.package.config;
+  });
 }
