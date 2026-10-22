@@ -6,3 +6,6 @@
 
 # Nix build output file
 result
+
+# Rust build output directory
+/target
