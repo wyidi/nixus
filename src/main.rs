@@ -20,7 +20,7 @@ fn main() {
 
     match &cli.command {
         Commands::Init {} => {
-
+            std::fs::create_dir(".nixus").unwrap();
         }
         Commands::Plan {} => {
 
