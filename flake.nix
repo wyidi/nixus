@@ -32,6 +32,8 @@
             rustc cargo
           ];
         };
+
+        packages.nixus = pkgs.callPackage ./package.nix { };
       };
 
     });
