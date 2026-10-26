@@ -46,49 +46,59 @@ pub struct Plan {
     pub order: Vec<String>,
 }
 
+pub trait Planner {
+    fn plan(&self) -> Plan;
+}
 
 use std::process::Command;
+use std::path::Path;
 
-pub fn plan() -> Plan {
+pub struct ApplyPlanner {
+    cwd: Option<String>
+}
 
-    // pure flake output attribute evaluation
-    let output = Command::new("nix")
-        .arg("eval")
-        .arg(format!(".#nixus.{}.plan", eval_flake_system()))
-        .arg("--json")
-        .output()
-        .expect("Failed to start deploy plan evaluation");
-
-    // impure evaluation example    
-    /*
-    let output = Command::new("nix")
-        .arg("eval")
-        .arg("--impure")
-        .arg("--json")
-        .arg("--expr")
-        .arg(r#"
-        let
-            flake = builtins.getFlake (toString ./.);
-        in
-            flake.nixus.${builtins.currentSystem}.plan
-        "#)
-        .output()
-        .expect("Failed to start evaluation");
-    */
-
-    if !output.status.success() {
-        println!("{}", &String::from_utf8(output.stdout).expect("stdout is not valid UTF-8"));
-        println!("{}", &String::from_utf8(output.stderr).expect("stderr is not valid UTF-8"));
-        panic!("Failed to evaluate deploy plan");
+impl ApplyPlanner {
+    pub fn new() -> Self {
+        Self {
+            cwd: None
+        }
     }
 
-    let plan: Plan = serde_json::from_str(
-        &String::from_utf8(output.stdout).expect("stdout is not valid UTF-8")
-    ).unwrap();
+    pub fn current_dir(&mut self, dir: &Path) -> &mut Self {
+        self.cwd = Some(String::from(dir.to_str().unwrap()));
+        self
+    }
+}
 
-    println!("{:#?}", plan);
+impl Planner for ApplyPlanner {
+    fn plan(&self) -> Plan {
+        // pure flake output attribute evaluation
+        let mut cmd = Command::new("nix");
 
-    plan
+        self.cwd.as_ref().inspect(|cwd| {
+            cmd.current_dir(cwd);
+        });
+
+        let output = cmd.arg("eval")
+            .arg(format!(".#nixus.{}.plan", eval_flake_system()))
+            .arg("--json")
+            .output()
+            .expect("Failed to start plan evaluation");
+
+        if !output.status.success() {
+            println!("{}", &String::from_utf8(output.stdout).expect("stdout is not valid UTF-8"));
+            println!("{}", &String::from_utf8(output.stderr).expect("stderr is not valid UTF-8"));
+            panic!("Failed to evaluate plan");
+        }
+
+        let plan: Plan = serde_json::from_str(
+            &String::from_utf8(output.stdout).expect("stdout is not valid UTF-8")
+        ).unwrap();
+
+        println!("{:#?}", plan);
+
+        plan
+    }
 }
 
 

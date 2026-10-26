@@ -20,13 +20,14 @@ fn main() {
 
     use std::process::Command;
     use std::collections::HashMap;
+    use nixus::Planner;
 
     match &cli.command {
         Commands::Init {} => {
             std::fs::create_dir(".nixus").unwrap();
         }
         Commands::Plan {} => {
-            let plan = nixus::plan();
+            let plan = nixus::ApplyPlanner::new().plan();
 
             let mut nodes = HashMap::new();
 
@@ -126,7 +127,7 @@ fn main() {
             }
         }
         Commands::Apply {} => {
-            let plan = nixus::plan();
+            let plan = nixus::ApplyPlanner::new().plan();
 
             let mut nodes = HashMap::new();
 
