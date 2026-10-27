@@ -38,3 +38,41 @@ fn plan_one_tf_node() {
         ],
     });
 }
+
+#[test]
+fn plan_one_targeted_svc_node() {
+    let flake = core::get_flake();
+
+    let tmp_dir = tempfile::tempdir().unwrap();
+    println!("{}", tmp_dir.path().display());
+
+    std::fs::write(tmp_dir.path().join("flake.nix"), flake).unwrap();
+
+    let mut path = std::path::PathBuf::from(file!());
+    path.pop();
+    path.push("fixtures");
+    path.push("outputs02.nix");
+
+    std::fs::copy(path, tmp_dir.path().join("outputs.nix")).unwrap();
+
+    use std::process::Command;
+    use nixus::Planner;
+
+    let path = std::env::current_dir().unwrap();
+    let plan = nixus::TargetedApplyPlanner::new("A")
+                            .current_dir(tmp_dir.path())
+                            .plan();
+
+    assert_eq!(plan, nixus::Plan {
+        nodes: vec![
+            nixus::Node::Service {
+                id      : String::from("Service.A"),
+                name    : String::from("A"),
+                requires: vec![]
+            }
+        ],
+        order: vec![
+            String::from("Service.A")
+        ],
+    });
+}
