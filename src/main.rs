@@ -10,8 +10,12 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Init    {},
-    Plan    {},
-    Apply   {},
+    Plan    {
+        target: Option<String>,
+    },
+    Apply   {
+        target: Option<String>,
+    },
     Destroy {},
 }
 
@@ -26,8 +30,15 @@ fn main() {
         Commands::Init {} => {
             std::fs::create_dir(".nixus").unwrap();
         }
-        Commands::Plan {} => {
-            let plan = nixus::ApplyPlanner::new().plan();
+        Commands::Plan { target } => {
+            let plan = match target {
+                Some(target) => {
+                    nixus::TargetedApplyPlanner::new(target).plan()
+                }
+                None => {
+                    nixus::ApplyPlanner::new().plan()
+                }
+            };
 
             let mut nodes = HashMap::new();
 
@@ -126,8 +137,15 @@ fn main() {
                 };
             }
         }
-        Commands::Apply {} => {
-            let plan = nixus::ApplyPlanner::new().plan();
+        Commands::Apply { target } => {
+            let plan = match target {
+                Some(target) => {
+                    nixus::TargetedApplyPlanner::new(target).plan()
+                }
+                None => {
+                    nixus::ApplyPlanner::new().plan()
+                }
+            };
 
             let mut nodes = HashMap::new();
 
