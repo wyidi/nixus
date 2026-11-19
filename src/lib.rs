@@ -101,6 +101,55 @@ impl Planner for ApplyPlanner {
     }
 }
 
+pub struct TargetedApplyPlanner {
+    cwd   : Option<String>,
+    target: String
+}
+
+impl TargetedApplyPlanner {
+    pub fn new(target: &str) -> Self {
+        Self {
+            cwd   : None,
+            target: String::from(target)
+        }
+    }
+
+    pub fn current_dir(&mut self, dir: &Path) -> &mut Self {
+        self.cwd = Some(String::from(dir.to_str().unwrap()));
+        self
+    }
+}
+
+impl Planner for TargetedApplyPlanner {
+    fn plan(&self) -> Plan {
+
+        let mut cmd = Command::new("nix");
+
+        self.cwd.as_ref().inspect(|cwd| {
+            cmd.current_dir(cwd);
+        });
+
+        let output = cmd.arg("eval")
+            .arg(format!(".#nixus.{}.plan_of.{}", eval_flake_system(), self.target))
+            .arg("--json")
+            .output()
+            .expect("Failed to start plan evaluation");
+
+        if !output.status.success() {
+            println!("{}", &String::from_utf8(output.stdout).expect("stdout is not valid UTF-8"));
+            println!("{}", &String::from_utf8(output.stderr).expect("stderr is not valid UTF-8"));
+            panic!("Failed to evaluate plan");
+        }
+
+        let plan: Plan = serde_json::from_str(
+            &String::from_utf8(output.stdout).expect("stdout is not valid UTF-8")
+        ).unwrap();
+
+        println!("{:#?}", plan);
+
+        plan
+    }
+}
 
 pub fn eval_flake_system() -> String {
     let system_eval = Command::new("nix")
