@@ -17,11 +17,12 @@ fn plan_one_tf_node() {
     std::fs::copy(path, tmp_dir.path().join("outputs.nix")).unwrap();
 
     use std::process::Command;
+    use nixus::Planner;
 
     let path = std::env::current_dir().unwrap();
-    std::env::set_current_dir(tmp_dir.path());
-    let plan = nixus::plan();
-    std::env::set_current_dir(path);
+    let plan = nixus::ApplyPlanner::new()
+                        .current_dir(tmp_dir.path())
+                        .plan();
 
     assert_eq!(plan, nixus::Plan {
         nodes: vec![
