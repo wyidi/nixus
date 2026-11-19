@@ -1,5 +1,5 @@
 { nixus-lib, ... }: let
-  inherit (nixus-lib) reverse toposort;
+  inherit (nixus-lib) reverse toposort bfs;
 in {
 
   flake.tests.ReverseGraph = {
@@ -76,6 +76,26 @@ in {
     in {
       expr     = toposort graph;
       expected = [ [ "nodeA" "nodeC" ] [ "nodeB" "nodeD" ] [ "nodeE" ] [ "nodeF" ] ];
+    };
+  };
+
+
+  flake.tests.TopologicalSortAfterBFS = {
+    testCase1 = let
+      graph = {
+        nodeA = [];
+        nodeB = [ "nodeA" ];
+
+        nodeC = [];
+        nodeD = [ "nodeC" ];
+        nodeE = [ "nodeD" ];
+        nodeF = [ "nodeB" "nodeE" ];
+      };
+
+      subgraph = bfs graph "nodeE";
+    in {
+      expr     = toposort subgraph;
+      expected = [ [ "nodeC" ] [ "nodeD" ] [ "nodeE" ] ];
     };
   };
 
